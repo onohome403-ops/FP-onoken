@@ -23,3 +23,9 @@
 - claude.ai のサイドバーにピン留め済み
 - デスクトップ用ショートカット：Windows は `今日のTo-Do帳.url`、Mac は `今日のTo-Do帳.webloc` をデスクトップに置いてダブルクリック
 - ブラウザのブックマークバーに登録（Ctrl+D / ⌘+D）
+
+## スマホのホーム画面に追加
+
+- iPhone（Safari）：リンクを開く →「共有」→「ホーム画面に追加」
+- Android（Chrome）：リンクを開く →「︙」→「ホーム画面に追加」
+- 入力専用にしたい場合は URL末尾に `#add` を付けたリンク（https://claude.ai/artifact/Vy9HGvo2QPF1oP8nvZJ55A#add）を登録すると、開いた時点で入力欄が選択された状態になります
