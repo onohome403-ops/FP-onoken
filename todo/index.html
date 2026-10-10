@@ -1,0 +1,284 @@
+<title>今日のTo-Do帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: single narrow column — 持ち越し → 今日 → この先 → 完了, add form pinned at top */
+:root {
+  --bg: #f5f6f4;
+  --surface: #ffffff;
+  --fg: #1d2522;
+  --muted: #66716c;
+  --line: #dde2df;
+  --accent: #2c6b5e;
+  --accent-soft: #e2efeb;
+  --warn: #b0452f;
+  --warn-soft: #f8e7e2;
+  --hi: #b0452f; --mid: #a5761b; --lo: #66716c;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141917; --surface: #1c2320; --fg: #e5ebe8; --muted: #93a09a; --line: #2e3833;
+  --accent: #6fbfa9; --accent-soft: #1f3530; --warn: #ec8b74; --warn-soft: #3a2420;
+  --hi: #ec8b74; --mid: #dcb35d; --lo: #93a09a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141917; --surface: #1c2320; --fg: #e5ebe8; --muted: #93a09a; --line: #2e3833;
+  --accent: #6fbfa9; --accent-soft: #1f3530; --warn: #ec8b74; --warn-soft: #3a2420;
+  --hi: #ec8b74; --mid: #dcb35d; --lo: #93a09a; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.6 }
+.wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 28px }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap }
+h1 { margin: 0; font-size: 22px; font-weight: 700; text-wrap: balance }
+.date { font-family: var(--font-mono); color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums }
+.summary { display: flex; gap: 8px; flex-wrap: wrap }
+.pill { font-size: 12px; padding: 3px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 500 }
+.pill.warn { background: var(--warn-soft); color: var(--warn) }
+
+form.add { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px }
+.row { display: flex; gap: 8px; flex-wrap: wrap }
+.row > * { min-width: 0 }
+input, select, button { font: inherit; color: var(--fg) }
+input[type=text], input[type=date], select {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px }
+#f-title { flex: 1 1 260px }
+button { cursor: pointer; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); padding: 8px 12px }
+button.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700 }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.quick { display: flex; gap: 6px; flex-wrap: wrap }
+.quick button { font-size: 12px; padding: 4px 10px }
+.quick button[aria-pressed=true] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft) }
+
+section h2 { font-size: 13px; letter-spacing: .08em; color: var(--muted); margin: 0 0 8px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline }
+section.overdue h2 { color: var(--warn) }
+ul.list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line) }
+li.task { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: start; padding: 10px 2px; border-bottom: 1px solid var(--line) }
+li.task.done .t-title { text-decoration: line-through; color: var(--muted) }
+.check { width: 22px; height: 22px; margin-top: 2px; border-radius: 50%; border: 2px solid var(--muted); background: transparent; padding: 0; display: grid; place-items: center }
+li.task.done .check { background: var(--accent); border-color: var(--accent) }
+li.task.done .check::after { content: ""; width: 6px; height: 11px; border: solid var(--bg); border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px,-1px) }
+.t-body { min-width: 0 }
+.t-title { overflow-wrap: anywhere }
+.meta { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 2px }
+.meta .due { font-family: var(--font-mono); font-variant-numeric: tabular-nums }
+.meta .late { color: var(--warn); font-weight: 700 }
+.prio { font-weight: 700 }
+.prio.p高 { color: var(--hi) } .prio.p中 { color: var(--mid) } .prio.p低 { color: var(--lo) }
+.acts { display: flex; gap: 4px }
+.acts button { font-size: 12px; padding: 3px 8px; color: var(--muted) }
+.acts button.del-confirm { color: var(--warn); border-color: var(--warn) }
+.empty { color: var(--muted); font-size: 13px; padding: 12px 2px }
+details summary { cursor: pointer; color: var(--muted); font-size: 13px }
+.status { font-size: 12px; color: var(--muted) }
+.status.err { color: var(--warn) }
+@media (prefers-reduced-motion: no-preference) { li.task { transition: opacity .2s } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="date" id="today-label"></div>
+      <h1>今日のTo-Do帳</h1>
+    </div>
+    <div class="summary" id="summary"></div>
+  </header>
+
+  <form class="add" id="add-form" autocomplete="off">
+    <div class="row">
+      <input type="text" id="f-title" placeholder="やること（例：セミナー資料の構成を見直す）" required maxlength="200">
+      <button type="submit" class="primary">追加</button>
+    </div>
+    <div class="row">
+      <input type="date" id="f-due" aria-label="期限">
+      <select id="f-cat" aria-label="分類">
+        <option>仕事</option><option>学習</option><option>地域・家族</option><option>その他</option>
+      </select>
+      <select id="f-prio" aria-label="優先度">
+        <option value="高">優先度：高</option><option value="中" selected>優先度：中</option><option value="低">優先度：低</option>
+      </select>
+    </div>
+    <div class="quick" id="quick">
+      <button type="button" data-d="0" aria-pressed="true">今日</button>
+      <button type="button" data-d="1" aria-pressed="false">明日</button>
+      <button type="button" data-d="7" aria-pressed="false">1週間後</button>
+    </div>
+    <div class="status" id="status">保存先に接続しています…</div>
+  </form>
+
+  <section class="overdue" id="sec-overdue" hidden>
+    <h2><span>持ち越し（期限を過ぎて未完了）</span><span id="cnt-overdue"></span></h2>
+    <ul class="list" id="list-overdue"></ul>
+  </section>
+
+  <section>
+    <h2><span>今日やること</span><span id="cnt-today"></span></h2>
+    <ul class="list" id="list-today"></ul>
+  </section>
+
+  <section>
+    <h2><span>この先の予定</span><span id="cnt-later"></span></h2>
+    <ul class="list" id="list-later"></ul>
+  </section>
+
+  <section>
+    <details id="done-box">
+      <summary>完了したタスク（直近7日）<span id="cnt-done"></span></summary>
+      <ul class="list" id="list-done" style="margin-top:8px"></ul>
+    </details>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, "0");
+  const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const addDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return ymd(d); };
+  const dayDiff = (a, b) => Math.round((new Date(a + "T00:00") - new Date(b + "T00:00")) / 86400000);
+  const WD = ["日", "月", "火", "水", "木", "金", "土"];
+  const fmt = s => { const d = new Date(s + "T00:00"); return `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`; };
+  const PRIO = { "高": 0, "中": 1, "低": 2 };
+
+  let today = ymd(new Date());
+  let tasks = [];
+  let col = null;
+  let pendingDelete = null;
+
+  $("today-label").textContent = `${today.replace(/-/g, ".")}（${WD[new Date().getDay()]}）`;
+  $("f-due").value = today;
+
+  $("quick").addEventListener("click", e => {
+    const b = e.target.closest("button[data-d]"); if (!b) return;
+    $("f-due").value = addDays(+b.dataset.d);
+    syncQuick();
+  });
+  $("f-due").addEventListener("input", syncQuick);
+  function syncQuick() {
+    for (const b of $("quick").querySelectorAll("button"))
+      b.setAttribute("aria-pressed", String(addDays(+b.dataset.d) === $("f-due").value));
+  }
+
+  function setStatus(msg, err) { const s = $("status"); s.textContent = msg; s.classList.toggle("err", !!err); }
+
+  function sortTasks(arr) {
+    return arr.slice().sort((a, b) =>
+      (a.due || "9999").localeCompare(b.due || "9999") || (PRIO[a.priority] ?? 1) - (PRIO[b.priority] ?? 1) || (a.createdAt || "").localeCompare(b.createdAt || ""));
+  }
+
+  function render() {
+    today = ymd(new Date());
+    const open = tasks.filter(t => !t.done);
+    const overdue = sortTasks(open.filter(t => t.due && t.due < today));
+    const todays = sortTasks(open.filter(t => !t.due || t.due === today));
+    const later = sortTasks(open.filter(t => t.due && t.due > today));
+    const weekAgo = addDays(-7);
+    const done = tasks.filter(t => t.done && (t.doneAt || "") >= weekAgo).sort((a, b) => (b.doneAt || "").localeCompare(a.doneAt || ""));
+    const doneToday = tasks.filter(t => t.done && t.doneAt === today).length;
+
+    fill("list-overdue", overdue, "期限切れのタスクはありません。");
+    fill("list-today", todays, "今日のタスクはまだありません。上のフォームから追加できます。");
+    fill("list-later", later, "この先の予定はありません。");
+    fill("list-done", done, "直近7日に完了したタスクはありません。");
+    $("sec-overdue").hidden = overdue.length === 0;
+    $("cnt-overdue").textContent = `${overdue.length}件`;
+    $("cnt-today").textContent = `${todays.length}件`;
+    $("cnt-later").textContent = `${later.length}件`;
+    $("cnt-done").textContent = `（${done.length}件）`;
+
+    const sum = $("summary"); sum.textContent = "";
+    const mk = (txt, warn) => { const s = document.createElement("span"); s.className = "pill" + (warn ? " warn" : ""); s.textContent = txt; sum.append(s); };
+    mk(`今日 残り${todays.length}件`);
+    mk(`今日 完了${doneToday}件`);
+    if (overdue.length) mk(`持ち越し${overdue.length}件`, true);
+  }
+
+  function fill(id, arr, emptyText) {
+    const ul = $(id); ul.textContent = "";
+    if (!arr.length) { const li = document.createElement("li"); li.className = "empty"; li.textContent = emptyText; ul.append(li); return; }
+    for (const t of arr) ul.append(row(t));
+  }
+
+  function row(t) {
+    const li = document.createElement("li");
+    li.className = "task" + (t.done ? " done" : "");
+    const chk = document.createElement("button");
+    chk.className = "check"; chk.type = "button";
+    chk.setAttribute("aria-label", t.done ? "未完了に戻す" : "完了にする");
+    chk.onclick = () => write(t.id, t.done ? { done: false, doneAt: null } : { done: true, doneAt: ymd(new Date()) });
+
+    const body = document.createElement("div"); body.className = "t-body";
+    const title = document.createElement("div"); title.className = "t-title"; title.textContent = t.title;
+    const meta = document.createElement("div"); meta.className = "meta";
+    const p = document.createElement("span"); p.className = "prio p" + (t.priority || "中"); p.textContent = t.priority || "中"; meta.append(p);
+    const c = document.createElement("span"); c.textContent = t.category || "その他"; meta.append(c);
+    if (t.due) {
+      const d = document.createElement("span"); d.className = "due"; d.textContent = "期限 " + fmt(t.due); meta.append(d);
+      if (!t.done && t.due < today) { const l = document.createElement("span"); l.className = "late"; l.textContent = `${dayDiff(today, t.due)}日持ち越し`; meta.append(l); }
+    }
+    if (t.done && t.doneAt) { const d = document.createElement("span"); d.textContent = "完了 " + fmt(t.doneAt); meta.append(d); }
+    body.append(title, meta);
+
+    const acts = document.createElement("div"); acts.className = "acts";
+    if (!t.done) {
+      if (t.due !== today) acts.append(btn("今日へ", () => write(t.id, { due: today })));
+      acts.append(btn("明日へ", () => write(t.id, { due: addDays(1) })));
+    }
+    const del = btn(pendingDelete === t.id ? "削除する" : "削除", () => {
+      if (pendingDelete === t.id) { pendingDelete = null; remove(t.id); }
+      else { pendingDelete = t.id; render(); setTimeout(() => { if (pendingDelete === t.id) { pendingDelete = null; render(); } }, 4000); }
+    });
+    if (pendingDelete === t.id) del.classList.add("del-confirm");
+    acts.append(del);
+    li.append(chk, body, acts);
+    return li;
+  }
+
+  function btn(label, fn) { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.onclick = fn; return b; }
+
+  async function write(id, patch) {
+    if (!col) return;
+    try { await col.doc(id).update(patch); }
+    catch (e) { setStatus("保存できませんでした。通信状況を確認してもう一度お試しください。", true); }
+  }
+  async function remove(id) {
+    if (!col) return;
+    try { await col.doc(id).delete(); }
+    catch (e) { setStatus("削除できませんでした。もう一度お試しください。", true); }
+  }
+
+  $("add-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const title = $("f-title").value.trim();
+    if (!title) return;
+    if (!col) { setStatus("保存先に接続できていないため追加できません。ページを開き直してください。", true); return; }
+    const data = {
+      title, due: $("f-due").value || today, category: $("f-cat").value, priority: $("f-prio").value,
+      done: false, doneAt: null, createdAt: new Date().toISOString()
+    };
+    try {
+      await col.add(data);
+      $("f-title").value = ""; $("f-title").focus();
+      setStatus("追加しました。");
+    } catch (err) {
+      setStatus(err && err.code === "quota_exceeded" ? "保存件数の上限です。古い完了タスクを削除してください。" : "追加できませんでした。もう一度お試しください。", true);
+    }
+  });
+
+  render();
+
+  // 日付が変わったら表示を更新（深夜0時をまたいで開いたままの場合）
+  setInterval(() => { if (ymd(new Date()) !== today) { $("today-label").textContent = `${ymd(new Date()).replace(/-/g, ".")}（${WD[new Date().getDay()]}）`; render(); } }, 60000);
+
+  (async () => {
+    const db = window.claude ? await window.claude.use("db") : null;
+    if (!db) { setStatus("保存先に接続できません。claude.ai にサインインした状態で開いてください。", true); return; }
+    col = db.collection("tasks");
+    setStatus("自動保存されます。毎朝・毎晩、未完了分をリマインドします。");
+    col.onSnapshot(snap => {
+      tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }, () => setStatus("同期が切れました。ページを開き直してください。", true));
+  })();
+})();
+</script>
