@@ -27,6 +27,7 @@
   --hi: #ec8b74; --mid: #dcb35d; --lo: #93a09a; color-scheme: dark }
 
 * { box-sizing: border-box }
+[hidden] { display: none !important }
 body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.6 }
 .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 28px }
 header { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap }
@@ -73,6 +74,27 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px }
 .status { font-size: 12px; color: var(--muted) }
 .status.err { color: var(--warn) }
 @media (prefers-reduced-motion: no-preference) { li.task { transition: opacity .2s } }
+/* 毎日のルーティン */
+.routine-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px }
+.routine-head h2 { margin: 0 }
+.meter { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-bottom: 6px }
+.meter > i { display: block; height: 100%; background: var(--accent); width: 0 }
+@media (prefers-reduced-motion: no-preference) { .meter > i { transition: width .3s } }
+.link-btn { border: 0; background: none; padding: 2px 4px; color: var(--accent); font-size: 12px; font-weight: 500 }
+li.rt { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; padding: 9px 2px; border-bottom: 1px solid var(--line) }
+li.rt.done .t-title { color: var(--muted) }
+li.rt.done .check { background: var(--accent); border-color: var(--accent) }
+li.rt.done .check::after { content: ""; width: 6px; height: 11px; border: solid var(--bg); border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px,-1px) }
+.week { display: flex; gap: 3px; align-items: center }
+.week i { width: 8px; height: 8px; border-radius: 2px; background: var(--line) }
+.week i.on { background: var(--accent) }
+.week i.off { background: transparent; border: 1px dashed var(--line) }
+.week i.today { outline: 1px solid var(--muted); outline-offset: 1px }
+.rt-sub { font-size: 12px; color: var(--muted) }
+form.rt-add { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 10px }
+form.rt-add input { flex: 1 1 200px; min-width: 0 }
+.rt-off-list { font-size: 12px; color: var(--muted); padding-top: 6px }
+
 /* スマホ：入力欄と追加ボタンを1行に、期限・分類・優先度を1行に。16pxでiPhoneの自動ズームを防ぐ */
 @media (max-width: 560px) {
   .wrap { padding-top: 16px; gap: 22px }
@@ -84,6 +106,7 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px }
   .row.opts #f-due { grid-column: 1 / -1 }
   li.task { grid-template-columns: 28px 1fr; }
   li.task .acts { grid-column: 2; margin-top: 2px }
+  form.rt-add input, form.rt-add select { font-size: 16px }
   .acts button { padding: 6px 12px }
 }
 </style>
@@ -118,6 +141,23 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px }
     </div>
     <div class="status" id="status">保存先に接続しています…</div>
   </form>
+
+  <section id="sec-routine">
+    <div class="routine-head">
+      <h2><span>毎日のルーティン <span id="cnt-routine"></span></span></h2>
+      <button type="button" class="link-btn" id="rt-edit-toggle" aria-expanded="false">編集</button>
+    </div>
+    <div class="meter" aria-hidden="true"><i id="rt-meter"></i></div>
+    <ul class="list" id="list-routine"></ul>
+    <div class="rt-off-list" id="rt-off" hidden></div>
+    <form class="rt-add" id="rt-add" hidden autocomplete="off">
+      <input type="text" id="rt-title" placeholder="ルーティンを追加（例：朝のメール確認）" maxlength="100" required>
+      <select id="rt-days" aria-label="実施する曜日">
+        <option value="all">毎日</option><option value="weekday">平日</option><option value="weekend">土日</option>
+      </select>
+      <button type="submit" class="primary">追加</button>
+    </form>
+  </section>
 
   <section class="overdue" id="sec-overdue" hidden>
     <h2><span>持ち越し（期限を過ぎて未完了）</span><span id="cnt-overdue"></span></h2>
@@ -157,6 +197,18 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px }
   let tasks = [];
   let col = null;
   let pendingDelete = null;
+  let routines = [];          // routines/{id}: {title, days:"all"|"weekday"|"weekend", order, createdAt}
+  let checks = {};            // date -> {routineId: true}（checks/{YYYY-MM-DD}: {date, done:{...}}）
+  let rtCol = null, ckCol = null;
+  let rtEditing = false;
+  let rtWriting = Promise.resolve();
+  const DAYS_LABEL = { all: "毎日", weekday: "平日", weekend: "土日" };
+  const appliesOn = (r, dateStr) => {
+    const wd = new Date(dateStr + "T00:00").getDay();
+    if (r.days === "weekday") return wd >= 1 && wd <= 5;
+    if (r.days === "weekend") return wd === 0 || wd === 6;
+    return true;
+  };
 
   $("today-label").textContent = `${today.replace(/-/g, ".")}（${WD[new Date().getDay()]}）`;
   $("f-due").value = today;
@@ -204,7 +256,116 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px }
     mk(`今日 残り${todays.length}件`);
     mk(`今日 完了${doneToday}件`);
     if (overdue.length) mk(`持ち越し${overdue.length}件`, true);
+    renderRoutines();
   }
+
+  function renderRoutines() {
+    const ul = $("list-routine"); ul.textContent = "";
+    const sorted = routines.slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.createdAt || "").localeCompare(b.createdAt || ""));
+    const todayList = sorted.filter(r => appliesOn(r, today));
+    const offToday = sorted.filter(r => !appliesOn(r, today));
+    const doneMap = (checks[today] || {});
+    const doneCount = todayList.filter(r => doneMap[r.id]).length;
+    $("cnt-routine").textContent = todayList.length ? `${doneCount}/${todayList.length}` : "";
+    $("rt-meter").style.width = todayList.length ? `${Math.round(doneCount / todayList.length * 100)}%` : "0";
+
+    if (!sorted.length) {
+      const li = document.createElement("li"); li.className = "empty";
+      li.textContent = "ルーティンはまだありません。「編集」から毎日やることを登録できます。";
+      ul.append(li);
+    }
+    const last7 = Array.from({ length: 7 }, (_, i) => addDays(i - 6));
+    for (const r of (rtEditing ? sorted : todayList)) {
+      const isOn = appliesOn(r, today);
+      const done = !!doneMap[r.id];
+      const li = document.createElement("li"); li.className = "rt" + (done && isOn ? " done" : "");
+      const chk = document.createElement("button"); chk.type = "button"; chk.className = "check";
+      chk.setAttribute("aria-label", done ? "チェックを外す" : "チェックする");
+      chk.disabled = !isOn;
+      if (!isOn) chk.style.opacity = ".35";
+      chk.onclick = () => toggleCheck(r.id);
+      const body = document.createElement("div"); body.className = "t-body";
+      const t = document.createElement("div"); t.className = "t-title"; t.textContent = r.title;
+      const sub = document.createElement("div"); sub.className = "rt-sub";
+      const streak = streakOf(r);
+      sub.textContent = DAYS_LABEL[r.days || "all"] + (streak >= 2 ? ` ・ ${streak}日連続` : "");
+      body.append(t, sub);
+      const right = document.createElement("div");
+      if (rtEditing) {
+        right.className = "acts";
+        const del = btn(pendingDelete === "rt:" + r.id ? "削除する" : "削除", () => {
+          if (pendingDelete === "rt:" + r.id) { pendingDelete = null; removeRoutine(r.id); }
+          else { pendingDelete = "rt:" + r.id; render(); setTimeout(() => { if (pendingDelete === "rt:" + r.id) { pendingDelete = null; render(); } }, 4000); }
+        });
+        if (pendingDelete === "rt:" + r.id) del.classList.add("del-confirm");
+        right.append(del);
+      } else {
+        right.className = "week"; right.setAttribute("aria-label", "直近7日の実施状況");
+        for (const d of last7) {
+          const i = document.createElement("i");
+          if (!appliesOn(r, d)) i.className = "off";
+          else if ((checks[d] || {})[r.id]) i.className = "on";
+          if (d === today) i.classList.add("today");
+          right.append(i);
+        }
+      }
+      li.append(chk, body, right);
+      ul.append(li);
+    }
+    const off = $("rt-off");
+    off.hidden = rtEditing || !offToday.length;
+    off.textContent = offToday.length ? `今日はお休み：${offToday.map(r => r.title).join("、")}` : "";
+  }
+
+  function streakOf(r) {
+    let n = 0;
+    for (let i = 0; i < 60; i++) {
+      const d = addDays(-i);
+      if (!appliesOn(r, d)) continue;
+      if ((checks[d] || {})[r.id]) n++;
+      else if (i === 0) continue;  // 今日まだ未チェックでも、昨日までの連続は数える
+      else break;
+    }
+    return n;
+  }
+
+  function toggleCheck(id) {
+    if (!ckCol) return;
+    const d = today;
+    rtWriting = rtWriting.then(async () => {
+      const cur = { ...(checks[d] || {}) };
+      if (cur[id]) delete cur[id]; else cur[id] = true;
+      checks = { ...checks, [d]: cur }; render();
+      try { await ckCol.doc(d).set({ date: d, done: cur }); }
+      catch (e) { setStatus("チェックを保存できませんでした。もう一度お試しください。", true); }
+    });
+  }
+
+  async function removeRoutine(id) {
+    if (!rtCol) return;
+    try { await rtCol.doc(id).delete(); }
+    catch (e) { setStatus("削除できませんでした。もう一度お試しください。", true); }
+  }
+
+  $("rt-edit-toggle").addEventListener("click", () => {
+    rtEditing = !rtEditing;
+    $("rt-edit-toggle").textContent = rtEditing ? "完了" : "編集";
+    $("rt-edit-toggle").setAttribute("aria-expanded", String(rtEditing));
+    $("rt-add").hidden = !rtEditing;
+    render();
+    if (rtEditing) $("rt-title").focus();
+  });
+
+  $("rt-add").addEventListener("submit", async e => {
+    e.preventDefault();
+    const title = $("rt-title").value.trim();
+    if (!title || !rtCol) return;
+    const maxOrder = routines.reduce((m, r) => Math.max(m, r.order ?? 0), 0);
+    try {
+      await rtCol.add({ title, days: $("rt-days").value, order: maxOrder + 1, createdAt: new Date().toISOString() });
+      $("rt-title").value = ""; $("rt-title").focus();
+    } catch (err) { setStatus("ルーティンを追加できませんでした。もう一度お試しください。", true); }
+  });
 
   function fill(id, arr, emptyText) {
     const ul = $(id); ul.textContent = "";
@@ -293,6 +454,20 @@ details summary { cursor: pointer; color: var(--muted); font-size: 13px }
     setStatus("自動保存されます。毎朝・毎晩、未完了分をリマインドします。");
     col.onSnapshot(snap => {
       tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }, () => setStatus("同期が切れました。ページを開き直してください。", true));
+
+    rtCol = db.collection("routines");
+    ckCol = db.collection("checks");
+    rtCol.onSnapshot(snap => {
+      routines = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }, () => setStatus("同期が切れました。ページを開き直してください。", true));
+    // 直近60日分のチェック（連続日数と7日表示に使う）
+    ckCol.where("date", ">=", addDays(-60)).onSnapshot(snap => {
+      const next = {};
+      for (const d of snap.docs) { const v = d.data(); next[v.date || d.id] = { ...(v.done || {}) }; }
+      checks = next;
       render();
     }, () => setStatus("同期が切れました。ページを開き直してください。", true));
   })();
