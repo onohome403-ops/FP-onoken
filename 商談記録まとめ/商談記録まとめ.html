@@ -1,0 +1,275 @@
+<title>商談記録まとめ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700&family=BIZ+UDGothic:wght@400;700&display=swap">
+<style>
+/* Layout: two working panes — 面談メモ（入力）→ 商談記録（出力）; stacked on phones */
+:root{
+  --bg:#f5f6f4; --surface:#ffffff; --ink:#1d2a2f; --muted:#5d6b70; --line:#d7ddda;
+  --accent:#1f5f6b; --accent-ink:#ffffff; --accent-soft:#e3eef0;
+  --warn:#9a5b00; --warn-soft:#fbf1e1; --ok:#2d6a3e;
+  --display:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",sans-serif;
+  --mono:"BIZ UDGothic","Hiragino Sans","Yu Gothic",monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141b1d; --surface:#1c2528; --ink:#e4ebec; --muted:#9aa9ad; --line:#33403f;
+  --accent:#6fb3bf; --accent-ink:#0d1a1d; --accent-soft:#1f3337;
+  --warn:#e3a94f; --warn-soft:#33281a; --ok:#7cc48e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141b1d; --surface:#1c2528; --ink:#e4ebec; --muted:#9aa9ad; --line:#33403f;
+  --accent:#6fb3bf; --accent-ink:#0d1a1d; --accent-soft:#1f3337;
+  --warn:#e3a94f; --warn-soft:#33281a; --ok:#7cc48e; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.7}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:20px;padding-block:24px 48px;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px}
+h1{font-family:var(--display);font-weight:700;font-size:1.55rem;margin:0;letter-spacing:.02em;text-wrap:balance}
+.lede{margin:0;color:var(--muted);font-size:.9rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.pane{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.pane-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h2{font-family:var(--display);font-size:1.05rem;margin:0;font-weight:700}
+.step{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;color:var(--accent);display:block;margin-bottom:2px}
+label.lbl{font-size:.8rem;color:var(--muted);letter-spacing:.04em}
+textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:12px;resize:vertical;line-height:1.7}
+textarea:focus,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#memo{min-height:300px}
+#record{min-height:420px;font-family:var(--mono);font-size:.9rem;background:var(--surface)}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:.82rem;cursor:pointer;user-select:none;background:var(--bg)}
+.chip input{accent-color:var(--accent);margin:0}
+.chip:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:inherit;font-weight:700;border-radius:4px;padding:9px 18px;cursor:pointer;border:1px solid var(--accent)}
+.primary{background:var(--accent);color:var(--accent-ink)}
+.secondary{background:transparent;color:var(--accent)}
+.ghost{background:transparent;color:var(--muted);border-color:var(--line);font-weight:400;padding:6px 12px;font-size:.85rem}
+button:disabled{opacity:.5;cursor:default}
+.status{font-size:.85rem;color:var(--muted)}
+.status.err{color:var(--warn)}
+.checks{border-left:3px solid var(--warn);background:var(--warn-soft);padding:10px 14px;border-radius:0 4px 4px 0}
+.checks h3{margin:0 0 4px;font-size:.85rem;color:var(--warn);font-family:var(--display)}
+.checks ul{margin:0;padding-left:1.2em;font-size:.88rem}
+.checks.clear{border-left-color:var(--ok);background:var(--accent-soft)}
+.checks.clear h3{color:var(--ok)}
+.note{font-size:.8rem;color:var(--muted);margin:0}
+.badge{font-family:var(--mono);font-size:.7rem;border:1px solid var(--line);border-radius:3px;padding:1px 6px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>商談記録まとめ</h1>
+      <p class="lede">面談メモや音声文字起こしを貼り付けると、所定の書式に沿って商談記録を下書きします。</p>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="pane" aria-labelledby="in-h">
+      <div class="pane-head">
+        <div><span class="step">STEP 1</span><h2 id="in-h">面談メモを貼り付ける</h2></div>
+        <div class="row">
+          <button class="ghost" id="sampleBtn" type="button">例文を入れる</button>
+          <button class="ghost" id="clearBtn" type="button">クリア</button>
+        </div>
+      </div>
+      <label class="lbl" for="memo">走り書き・箇条書き・文字起こし、どれでも可。順番もばらばらで構いません。</label>
+      <textarea id="memo" placeholder="例）ご本人50代・奥様同席。子の教育資金と老後資金が心配…"></textarea>
+
+      <div>
+        <div class="lbl" style="margin-bottom:6px">追加する項目（任意）</div>
+        <div class="opts" id="extras">
+          <label class="chip"><input type="checkbox" id="x-next" value="次回のお約束" checked>次回のお約束</label>
+          <label class="chip"><input type="checkbox" id="x-intent" value="意向の変化（当初意向と最終意向）">意向の変化</label>
+          <label class="chip"><input type="checkbox" id="x-family" value="ご家族・ご同意の状況">ご家族・ご同意の状況</label>
+          <label class="chip"><input type="checkbox" id="x-other" value="その他特記事項">その他特記事項</label>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="primary" id="runBtn" type="button">商談記録にまとめる</button>
+        <button class="secondary" id="stopBtn" type="button" hidden>止める</button>
+        <span class="status" id="status" role="status"></span>
+      </div>
+      <p class="note">実名・住所・電話番号・証券番号などはメモに入れず、「ご本人」「奥様」などの続柄で書くのがおすすめです。このページは入力内容を保存しません。</p>
+    </section>
+
+    <section class="pane" aria-labelledby="out-h">
+      <div class="pane-head">
+        <div><span class="step">STEP 2</span><h2 id="out-h">確認・修正してコピー</h2></div>
+        <div class="row">
+          <button class="ghost" id="blankBtn" type="button">空の書式</button>
+          <button class="primary" id="copyBtn" type="button">コピー</button>
+        </div>
+      </div>
+      <div id="checks" class="checks" hidden>
+        <h3 id="checksTitle">記載前に確認してください</h3>
+        <ul id="checksList"></ul>
+      </div>
+      <label class="lbl" for="record">商談記録（直接編集できます）</label>
+      <textarea id="record" spellcheck="false"></textarea>
+      <p class="note"><span class="badge">AI下書き</span> メモにない事実は書かず「要確認」と残します。提出前に必ずご自身で内容を確認してください。</p>
+    </section>
+  </div>
+</div>
+
+<script>
+const SECTIONS = [
+  {key:"mendansha", title:"【面談者】", hint:"（複数の場合は全ての方のお名前や関係を記載）"},
+  {key:"youbou",    title:"【お客さまのご要望（ヒアリングした内容）】"},
+  {key:"annai",     title:"【ご要望に対してご案内した内容】"},
+  {key:"teian",     title:"【提案した保険種類・保険会社・保険商品】", hint:"（推奨保険会社を提案していない場合や推奨保険会社以外を提案した場合はその理由）"},
+  {key:"kekka",     title:"【提案した結果】", hint:"（ご契約をお預かりした場合は、お客さまがその商品を選んだ具体的な理由）"},
+];
+const $ = id => document.getElementById(id);
+const memo = $("memo"), record = $("record"), statusEl = $("status");
+
+const SAMPLE = `※例文（架空の内容です）
+ご本人（40代・会社員）と奥様が同席、ご自宅で約60分。
+きっかけ：第二子誕生。今の死亡保障で足りるか不安。教育資金も気になる。
+現契約：独身時代の定期保険のみ。医療保障は会社の団体保険頼み。
+ヒアリング：住宅ローンあり（団信加入済）。奥様はパート。月々の保険料は今より大きく増やしたくない。
+ご案内：遺族年金・団信を踏まえた必要保障額を試算してお見せした。高額療養費制度も説明。
+提案：収入保障保険（推奨保険会社A社）と、医療保険（推奨保険会社B社）の2プラン。
+結果：収入保障保険は申込みいただいた。決め手は「年金で受け取れて、子どもの成長に合わせて保障額が減るので保険料が抑えられる」点。医療保険は奥様の分も含めて次回検討。
+次回：2週間後に医療保険の比較を持参。`;
+
+function extras(){ return [...document.querySelectorAll("#extras input:checked")].map(i=>i.value); }
+
+function blankTemplate(){
+  const parts = SECTIONS.map(s => `${s.title}\n${s.hint?s.hint+"\n":""}・`);
+  extras().forEach(e => parts.push(`【${e}】\n・`));
+  return parts.join("\n\n");
+}
+
+function toLines(v){
+  if (Array.isArray(v)) return v.map(x=>String(x).trim()).filter(Boolean);
+  if (typeof v === "string" && v.trim()) return v.split(/\n+/).map(x=>x.replace(/^[・\-\s]+/,"").trim()).filter(Boolean);
+  return [];
+}
+
+function format(data){
+  const blocks = SECTIONS.map(s => {
+    const lines = toLines(data[s.key]);
+    return `${s.title}\n` + (lines.length ? lines.map(l=>"・"+l).join("\n") : "・（記載なし：要確認）");
+  });
+  const ex = Array.isArray(data.extras) ? data.extras : [];
+  extras().forEach(name => {
+    const hit = ex.find(e => e && e.title === name);
+    const lines = hit ? toLines(hit.items) : [];
+    blocks.push(`【${name}】\n` + (lines.length ? lines.map(l=>"・"+l).join("\n") : "・特になし"));
+  });
+  return blocks.join("\n\n");
+}
+
+function showChecks(list){
+  const box = $("checks"), ul = $("checksList");
+  ul.replaceChildren();
+  box.hidden = false;
+  if (!list.length){
+    box.classList.add("clear");
+    $("checksTitle").textContent = "必須の観点はそろっています";
+    const li=document.createElement("li"); li.textContent="内容の正確さは提出前にご確認ください。"; ul.append(li);
+    return;
+  }
+  box.classList.remove("clear");
+  $("checksTitle").textContent = "記載前に確認してください";
+  list.forEach(t => { const li=document.createElement("li"); li.textContent=t; ul.append(li); });
+}
+
+function buildPrompt(text){
+  const ex = extras();
+  return `あなたは生命保険・損害保険の募集人を支える記録作成アシスタントです。
+以下の「面談メモ」から、保険募集の商談記録（社内の顧客対応記録）を作成してください。
+
+# 守ること
+- メモに書かれた事実だけを使う。推測で事実を補わない。わからない項目は空配列にする。
+- 丁寧で簡潔な業務文体（「〜を確認」「〜をご案内」「〜とのご意向」など）。1行1事実の箇条書き。
+- 主語は「お客さま」「ご本人」「奥様」など。メモに実名があっても続柄・属性に置き換える。電話番号・住所・証券番号は書かない。
+- 各項目の書き方:
+  - mendansha: 面談に同席した全員を、続柄・属性で列挙（例「ご本人（40代・会社員）」「奥様」）。面談の場所・形態・時間がわかれば最後に1行で。
+  - youbou: お客さまの意向・不安・状況など、ヒアリングした内容。お客さまの言葉に近い形で。
+  - annai: ご要望に対して説明・情報提供したこと（公的保障、試算、制度説明など）。
+  - teian: 提案した保険種類・保険会社・保険商品。メモに会社名や商品名があればそのまま。推奨保険会社以外を提案した、または推奨保険会社を提案していない場合は、その理由を「理由：〜」の1行で必ず書く（メモに理由がなければ書かずに checks に挙げる）。
+  - kekka: 申込み・検討継続・見送りなどの結果。契約をお預かりした場合は、お客さまがその商品を選んだ具体的な理由（お客さまの意向とどう合致したか）を必ず書く。
+- checks: 提出前に募集人が確認・追記すべき点を短く列挙。特に次の観点：面談者の漏れ、推奨保険会社以外の理由の欠落、契約時の選択理由が抽象的（「気に入った」等）または欠落、ご要望と提案内容のつながりが不明、比較推奨の説明の有無が不明、記録に残すべきでない情報（実名・連絡先等）がメモに含まれていた。問題なければ空配列。
+${ex.length ? `- extras: 次の追加項目もメモから作成する（該当がなければ items は空配列）：${ex.map(e=>"「"+e+"」").join("、")}` : "- extras: 空配列にする。"}
+
+# 出力
+JSONのみで返す。形式:
+{"mendansha":["..."],"youbou":["..."],"annai":["..."],"teian":["..."],"kekka":["..."],"extras":[{"title":"項目名","items":["..."]}],"checks":["..."]}
+
+# 面談メモ
+"""
+${text.slice(0, 20000)}
+"""`;
+}
+
+let samplePromise = null, ctl = null;
+function getSample(){
+  if (!samplePromise) samplePromise = (window.claude && window.claude.use) ? window.claude.use("sample").catch(()=>null) : Promise.resolve(null);
+  return samplePromise;
+}
+
+const ERR = {
+  not_granted:"Claudeの利用が許可されていないため、自動作成は使えません。「空の書式」から手入力できます。",
+  sampling_disabled:"このアカウントではClaudeを利用できません。「空の書式」から手入力できます。",
+  rate_limited:"利用が集中しています。少し時間をおいてもう一度お試しください。",
+  session_expired:"サインインし直してから、もう一度お試しください。",
+  invalid_json:"整理結果を読み取れませんでした。もう一度お試しください。",
+  prompt_too_large:"メモが長すぎます。要点に絞ってお試しください。",
+  refused:"このメモでは作成できませんでした。表現を変えてお試しください。",
+};
+
+async function run(){
+  const text = memo.value.trim();
+  if (!text){ statusEl.className="status err"; statusEl.textContent="面談メモを入力してください。"; memo.focus(); return; }
+  const sample = await getSample();
+  if (!sample){
+    statusEl.className="status err";
+    statusEl.textContent="この表示では自動作成を使えません。「空の書式」から手入力できます。";
+    return;
+  }
+  ctl = new AbortController();
+  $("runBtn").disabled = true; $("stopBtn").hidden = false;
+  statusEl.className="status"; statusEl.textContent="整理しています…（数十秒かかることがあります）";
+  try{
+    const data = await sample.json(buildPrompt(text), {signal: ctl.signal, cache:false});
+    if (!data || typeof data !== "object") throw {code:"invalid_json"};
+    record.value = format(data);
+    showChecks(toLines(data.checks));
+    statusEl.textContent = "下書きができました。内容を確認してコピーしてください。";
+  }catch(e){
+    if (e && e.code === "cancelled"){ statusEl.textContent = "止めました。"; }
+    else { statusEl.className="status err"; statusEl.textContent = ERR[e && e.code] || "うまく作成できませんでした。もう一度お試しください。"; }
+  }finally{
+    $("runBtn").disabled = false; $("stopBtn").hidden = true; ctl = null;
+  }
+}
+
+$("runBtn").addEventListener("click", run);
+$("stopBtn").addEventListener("click", ()=> ctl && ctl.abort());
+$("sampleBtn").addEventListener("click", ()=>{ memo.value = SAMPLE; memo.focus(); });
+$("clearBtn").addEventListener("click", ()=>{ memo.value=""; record.value = blankTemplate(); $("checks").hidden = true; statusEl.textContent=""; });
+$("blankBtn").addEventListener("click", ()=>{ record.value = blankTemplate(); $("checks").hidden = true; });
+$("copyBtn").addEventListener("click", async ()=>{
+  try{ await navigator.clipboard.writeText(record.value); statusEl.className="status"; statusEl.textContent="商談記録をコピーしました。"; }
+  catch(_){ record.focus(); record.select(); statusEl.className="status"; statusEl.textContent="選択しました。Ctrl+C（⌘+C）でコピーしてください。"; }
+});
+
+// 初期表示：例文と、その記入イメージ
+memo.value = SAMPLE;
+record.value = format({
+  mendansha:["ご本人（40代・会社員）","奥様","ご自宅にて約60分の対面面談"],
+  youbou:["第二子誕生を機に、現在の死亡保障で足りるか不安とのこと","教育資金の準備も気になっている","月々の保険料は現在から大きく増やしたくないとのご意向","現契約は独身時代の定期保険のみ。医療保障は勤務先の団体保険のみ","住宅ローンあり（団体信用生命保険に加入済）。奥様はパート勤務"],
+  annai:["遺族年金・団体信用生命保険を踏まえた必要保障額を試算しご説明","高額療養費制度についてご案内"],
+  teian:["収入保障保険（推奨保険会社A社）","医療保険（推奨保険会社B社）"],
+  kekka:["収入保障保険はお申込みをお預かり","選択理由：年金形式で受け取れ、お子さまの成長に合わせて保障額が逓減するため、必要保障を確保しつつ保険料を抑えられる点がご意向に合致","医療保険は奥様の分も含め次回検討"],
+  extras:[{title:"次回のお約束",items:["2週間後に医療保険の比較資料を持参"]}],
+});
+showChecks(["比較推奨（推奨保険会社の中から提案した理由）の説明内容がメモにないため、必要に応じて追記してください"]);
+statusEl.textContent = "表示中は例文の記入イメージです。";
+</script>
