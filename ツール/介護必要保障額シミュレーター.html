@@ -1,0 +1,431 @@
+<title>介護必要保障額シミュレーター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Old+Mincho:wght@600;700&display=swap">
+<style>
+/* Layout: 左に入力（お客様条件→住まい→備え）、右に結果（必要保障額→内訳→比較表）。狭い画面では縦に積む */
+:root {
+  --bg: #F3F5F4;
+  --panel: #FFFFFF;
+  --ink: #17262E;
+  --muted: #55646C;
+  --line: #D5DCDA;
+  --accent: #1F6F6A;
+  --accent-soft: #E1EFEC;
+  --warn: #A4541B;
+  --warn-soft: #F7EADF;
+  --bar: #8FB5B0;
+  --font-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11191D; --panel: #18242A; --ink: #E6EEEC; --muted: #9DB0B4; --line: #2C3D44;
+    --accent: #6FC2B9; --accent-soft: #1D3634; --warn: #F0A56B; --warn-soft: #3A2A1E; --bar: #3F7E77;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11191D; --panel: #18242A; --ink: #E6EEEC; --muted: #9DB0B4; --line: #2C3D44;
+  --accent: #6FC2B9; --accent-soft: #1D3634; --warn: #F0A56B; --warn-soft: #3A2A1E; --bar: #3F7E77;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 48px; display: flex; flex-direction: column; gap: 20px; }
+header h1 { font-family: var(--font-display); font-size: clamp(24px, 4vw, 34px); margin: 0; text-wrap: balance; }
+header p { margin: 4px 0 0; color: var(--muted); max-width: 70ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 420px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+section.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.card h2 { font-size: 13px; letter-spacing: .08em; color: var(--accent); margin: 0; font-weight: 700; }
+.row { display: grid; grid-template-columns: 1fr 140px; gap: 10px; align-items: center; }
+.row label { color: var(--ink); }
+.row small, .hint { display: block; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.unit { display: flex; align-items: center; gap: 6px; }
+.unit span { color: var(--muted); font-size: 13px; white-space: nowrap; }
+input[type=number], select { width: 100%; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; text-align: right; font-variant-numeric: tabular-nums; }
+select { text-align: left; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 14px; background: var(--bg); }
+.seg input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--panel); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.result { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+.headline { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: space-between; }
+.headline .label { font-size: 13px; color: var(--muted); letter-spacing: .06em; }
+.big { font-family: var(--font-display); font-size: clamp(40px, 7vw, 64px); line-height: 1.05; color: var(--warn); font-variant-numeric: tabular-nums; }
+.big small { font-size: .4em; margin-left: 4px; color: var(--ink); }
+.big.ok { color: var(--accent); }
+.status { display: inline-block; font-size: 13px; padding: 3px 10px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); font-weight: 700; }
+.status.ok { background: var(--accent-soft); color: var(--accent); }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 640px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kpi { background: var(--bg); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.kpi div { font-size: 12px; color: var(--muted); }
+.kpi b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.formula { font-size: 13px; color: var(--muted); background: var(--bg); border-radius: 8px; padding: 10px 12px; overflow-x: auto; }
+.formula b { color: var(--ink); }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; min-width: 520px; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-size: 12px; color: var(--muted); font-weight: 700; }
+tr.sel td { background: var(--accent-soft); font-weight: 700; }
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar { display: grid; grid-template-columns: 120px 1fr 90px; gap: 10px; align-items: center; font-size: 13px; }
+.bar .track { background: var(--bg); border-radius: 4px; height: 18px; overflow: hidden; }
+.bar .fill { height: 100%; background: var(--bar); border-radius: 4px; }
+.bar.sel .fill { background: var(--warn); }
+.bar b { text-align: right; font-variant-numeric: tabular-nums; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+button { font: inherit; border: 1px solid var(--accent); background: var(--accent); color: var(--panel); border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+button.ghost { background: transparent; color: var(--accent); }
+textarea { width: 100%; min-height: 150px; font: inherit; font-size: 13px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+.note { font-size: 12px; color: var(--muted); line-height: 1.7; }
+details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-size: 14px; }
+.toast { font-size: 13px; color: var(--accent); min-height: 1.4em; }
+@media (prefers-reduced-motion: no-preference) { .fill { transition: width .25s ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>介護必要保障額シミュレーター</h1>
+    <p>住まいの選択（在宅・松竹梅）と介護期間から必要総額を出し、年金と準備済みの資金を差し引いて「必要保障額」を自動で計算します。初期値は宮城郡の相場（みんなの介護の中央値ほか）です。</p>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <section class="card">
+        <h2>1. お客様の条件</h2>
+        <div>
+          <div class="hint" style="margin-bottom:6px">性別（健康寿命との差に使用）</div>
+          <div class="seg" role="radiogroup" aria-label="性別">
+            <input type="radio" name="sex" id="sexM" value="m" checked><label for="sexM">男性</label>
+            <input type="radio" name="sex" id="sexF" value="f"><label for="sexF">女性</label>
+          </div>
+        </div>
+        <div>
+          <div class="hint" style="margin-bottom:6px">介護期間の根拠</div>
+          <div class="seg" role="radiogroup" aria-label="介護期間">
+            <input type="radio" name="period" id="pAvg" value="avg" checked><label for="pAvg">平均介護期間</label>
+            <input type="radio" name="period" id="pHealth" value="health"><label for="pHealth">健康寿命との差</label>
+            <input type="radio" name="period" id="pCustom" value="custom"><label for="pCustom">任意</label>
+          </div>
+          <small class="hint" id="periodHint" style="margin-top:6px"></small>
+        </div>
+        <div class="row" id="customRow" hidden>
+          <label for="customYears">任意の期間</label>
+          <div class="unit"><input type="number" id="customYears" min="0" step="0.5" value="10"><span>年</span></div>
+        </div>
+        <div class="row">
+          <label for="ratio">介護保険の負担割合</label>
+          <select id="ratio">
+            <option value="1">1割</option>
+            <option value="2">2割</option>
+            <option value="3">3割</option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="cap">高額介護サービス費の上限<small>世帯の所得区分</small></label>
+          <select id="cap">
+            <option value="1.5">1.5万円（年金80万円以下など）</option>
+            <option value="2.46">2.46万円（住民税非課税）</option>
+            <option value="4.44" selected>4.44万円（一般）</option>
+            <option value="9.33">9.33万円（年収約770万円〜）</option>
+            <option value="14.01">14.01万円（年収約1,160万円〜）</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>2. 希望する住まい</h2>
+        <div class="row">
+          <label for="course">コース</label>
+          <select id="course"></select>
+        </div>
+        <div class="row">
+          <label for="fInitial">入居一時金・一時費用</label>
+          <div class="unit"><input type="number" id="fInitial" min="0" step="0.1"><span>万円</span></div>
+        </div>
+        <div class="row">
+          <label for="fMonthly">施設の月額利用料<small id="monthlyNote"></small></label>
+          <div class="unit"><input type="number" id="fMonthly" min="0" step="0.1"><span>万円</span></div>
+        </div>
+        <div class="row">
+          <label for="fKaigo">介護保険の自己負担（1割時）<small id="kaigoNote"></small></label>
+          <div class="unit"><input type="number" id="fKaigo" min="0" step="0.1"><span>万円</span></div>
+        </div>
+        <div class="row">
+          <label for="fMisc">医療費・日用品など</label>
+          <div class="unit"><input type="number" id="fMisc" min="0" step="0.1"><span>万円</span></div>
+        </div>
+        <div class="actions"><button type="button" class="ghost" id="resetCourse">このコースを初期値に戻す</button></div>
+      </section>
+
+      <section class="card">
+        <h2>3. 準備できているお金</h2>
+        <div class="row">
+          <label for="pension">年金から介護に充てられる額<small>生活費を除いた分</small></label>
+          <div class="unit"><input type="number" id="pension" min="0" step="0.1" value="10"><span>万円/月</span></div>
+        </div>
+        <div class="row">
+          <label for="annuity">加入済みの介護年金・認知症年金</label>
+          <div class="unit"><input type="number" id="annuity" min="0" step="0.1" value="0"><span>万円/月</span></div>
+        </div>
+        <div class="row">
+          <label for="savings">介護用に確保した預貯金</label>
+          <div class="unit"><input type="number" id="savings" min="0" step="10" value="300"><span>万円</span></div>
+        </div>
+        <div class="row">
+          <label for="lump">加入済み保険の一時金<small>介護一時金・認知症一時金など</small></label>
+          <div class="unit"><input type="number" id="lump" min="0" step="10" value="0"><span>万円</span></div>
+        </div>
+        <small class="hint">入力欄の数字は例です。お客様の実際の数字に置き換えてください。</small>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="result" aria-live="polite">
+        <div class="headline">
+          <div>
+            <div class="label">必要保障額（準備すべき不足額）</div>
+            <div class="big" id="need">—</div>
+          </div>
+          <span class="status" id="status">—</span>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div>介護期間</div><b id="kMonths">—</b></div>
+          <div class="kpi"><div>月額の合計</div><b id="kMonthly">—</b></div>
+          <div class="kpi"><div>月々の不足</div><b id="kShort">—</b></div>
+          <div class="kpi"><div>必要総額</div><b id="kTotal">—</b></div>
+        </div>
+        <div class="formula" id="formula"></div>
+      </section>
+
+      <section class="card">
+        <h2>コース別・期間別の必要保障額</h2>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>コース</th><th>月額の合計</th><th>平均 55か月</th><th id="thHealth">健康寿命との差</th><th id="thCustom">任意</th></tr></thead>
+            <tbody id="matrix"></tbody>
+          </table>
+        </div>
+        <small class="hint">同じ「準備できているお金」で、すべてのコースを比べています。選択中のコースを強調表示しています。</small>
+      </section>
+
+      <section class="card">
+        <h2>選択中の期間でのコース比較</h2>
+        <div class="bars" id="bars"></div>
+      </section>
+
+      <section class="card">
+        <h2>提案書に貼る文章</h2>
+        <textarea id="summary" readonly aria-label="提案書用の要約"></textarea>
+        <div class="actions"><button type="button" id="copy">文章をコピー</button><span class="toast" id="toast"></span></div>
+      </section>
+
+      <section class="card">
+        <details>
+          <summary>計算方法とデータの出典</summary>
+          <div class="note">
+            <p><b>月額の合計</b>＝施設の月額利用料＋介護保険の自己負担（1割時の額×負担割合。ただし高額介護サービス費の上限まで）＋医療費・日用品。特養・老健は月額利用料に1割分の介護費が含まれるとみて、2割・3割で増える分だけを加えます。在宅は全国平均の月額（介護保険の自己負担を含む）をそのまま使います。</p>
+            <p><b>必要総額</b>＝入居一時金・一時費用＋月額の合計×介護期間</p>
+            <p><b>必要保障額</b>＝入居一時金・一時費用＋（月額の合計−年金充当額−介護年金）×介護期間−介護用の預貯金−保険の一時金（0未満は0）</p>
+            <p><b>介護期間</b>：平均介護期間55か月（生命保険文化センター「2024年度 生命保険に関する全国実態調査」）。健康寿命との差は男性 約8.5年・女性 約11.6年（2022年の健康寿命と平均寿命の差、要確認）。</p>
+            <p><b>施設の相場（宮城郡）</b>：介護付き有料・住宅型有料・サ高住はみんなの介護の宮城郡の中央値。特養・老健はケアスル介護の松島町・七ヶ浜町の中央値の平均。在宅は全国平均（月5.2万円、一時費用47万円）。特上は仙台市中心部の高級ホームの価格帯から置いた仮定の値です。</p>
+            <p>介護保険の自己負担（1割時）は要介護3を想定した目安です。高額介護サービス費の上限額は世帯の状況で変わるため、最新の基準をご確認ください。</p>
+          </div>
+        </details>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  // 1割時の介護保険自己負担: kaigoBase。included=true は月額利用料に1割分が含まれる（特養・老健）
+  var DEFAULTS = [
+    { id: "home",  name: "在宅介護",           initial: 47,   monthly: 5.2,  kaigo: 0,   misc: 0, mode: "home" },
+    { id: "ume",   name: "梅：特養・老健",      initial: 0,    monthly: 8.9,  kaigo: 2.2, misc: 1, mode: "included" },
+    { id: "take1", name: "竹：住宅型有料",      initial: 0,    monthly: 12.7, kaigo: 2.7, misc: 1, mode: "add" },
+    { id: "take2", name: "竹：サ高住",          initial: 14.5, monthly: 16.6, kaigo: 2.7, misc: 1, mode: "add" },
+    { id: "matsu", name: "松：介護付き有料",    initial: 23,   monthly: 21.1, kaigo: 2.2, misc: 1, mode: "add" },
+    { id: "toku",  name: "特上：高級ホーム（仮定）", initial: 500, monthly: 33, kaigo: 2.2, misc: 2, mode: "add" }
+  ];
+  var HEALTH_GAP = { m: 8.5, f: 11.6 };
+  var STORE_KEY = "kaigo-need-sim-v1";
+
+  var courses = JSON.parse(JSON.stringify(DEFAULTS));
+  var $ = function (id) { return document.getElementById(id); };
+  var num = function (id) { var v = parseFloat($(id).value); return isFinite(v) && v > 0 ? v : 0; };
+  var man = function (v) { return Math.round(v).toLocaleString("ja-JP") + "万円"; };
+  var man1 = function (v) { return (Math.round(v * 10) / 10).toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "万円"; };
+
+  function radio(name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : null; }
+
+  function load() {
+    try {
+      var s = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      if (!s) return;
+      if (Array.isArray(s.courses)) {
+        s.courses.forEach(function (c) {
+          var t = courses.find(function (x) { return x.id === c.id; });
+          if (t) ["initial", "monthly", "kaigo", "misc"].forEach(function (k) { if (typeof c[k] === "number") t[k] = c[k]; });
+        });
+      }
+      if (s.fields) Object.keys(s.fields).forEach(function (k) { if ($(k)) $(k).value = s.fields[k]; });
+      if (s.sex && $(s.sex === "f" ? "sexF" : "sexM")) $(s.sex === "f" ? "sexF" : "sexM").checked = true;
+      var pm = { avg: "pAvg", health: "pHealth", custom: "pCustom" };
+      if (s.period && pm[s.period]) $(pm[s.period]).checked = true;
+    } catch (e) { /* 保存なしで動作 */ }
+  }
+  function save() {
+    try {
+      var fields = {};
+      ["customYears", "ratio", "cap", "course", "pension", "annuity", "savings", "lump"].forEach(function (k) { fields[k] = $(k).value; });
+      localStorage.setItem(STORE_KEY, JSON.stringify({ courses: courses, fields: fields, sex: radio("sex"), period: radio("period") }));
+    } catch (e) { /* 保存できない環境でも計算は続ける */ }
+  }
+
+  function monthsFor(kind) {
+    if (kind === "avg") return 55;
+    if (kind === "health") return Math.round(HEALTH_GAP[radio("sex")] * 12);
+    return Math.round(num("customYears") * 12);
+  }
+
+  function kaigoCost(c, ratio, cap) {
+    if (c.mode === "home") return 0;
+    var full = Math.min(c.kaigo * ratio, cap);
+    if (c.mode === "included") return Math.max(full - Math.min(c.kaigo, cap), 0);
+    return full;
+  }
+
+  function calc(c, months) {
+    var ratio = parseInt($("ratio").value, 10) || 1;
+    var cap = parseFloat($("cap").value) || 4.44;
+    var kaigo = kaigoCost(c, ratio, cap);
+    var monthly = c.monthly + kaigo + c.misc;
+    var income = num("pension") + num("annuity");
+    var short = Math.max(monthly - income, 0);
+    var total = c.initial + monthly * months;
+    var prepared = num("savings") + num("lump");
+    var need = Math.max(c.initial + short * months - prepared, 0);
+    return { kaigo: kaigo, monthly: monthly, short: short, total: total, need: need, prepared: prepared, income: income };
+  }
+
+  function current() { return courses.find(function (c) { return c.id === $("course").value; }) || courses[0]; }
+
+  function fillCourseFields() {
+    var c = current();
+    $("fInitial").value = c.initial;
+    $("fMonthly").value = c.monthly;
+    $("fKaigo").value = c.kaigo;
+    $("fMisc").value = c.misc;
+    var home = c.mode === "home";
+    $("fKaigo").disabled = home;
+    $("monthlyNote").textContent = home ? "全国平均。介護保険の自己負担を含む" : (c.mode === "included" ? "1割分の介護費を含む" : "介護保険の自己負担は含まない");
+    $("kaigoNote").textContent = home ? "在宅は月額に含む" : (c.mode === "included" ? "2割・3割で増える分を加算" : "要介護3の目安");
+  }
+
+  function readCourseFields() {
+    var c = current();
+    c.initial = num("fInitial");
+    c.monthly = num("fMonthly");
+    if (c.mode !== "home") c.kaigo = num("fKaigo");
+    c.misc = num("fMisc");
+  }
+
+  function render() {
+    var period = radio("period");
+    $("customRow").hidden = period !== "custom";
+    var sexLabel = radio("sex") === "f" ? "女性" : "男性";
+    var hYears = HEALTH_GAP[radio("sex")];
+    var hints = {
+      avg: "平均介護期間 55か月（約4年7か月）",
+      health: sexLabel + "の健康寿命と平均寿命の差 約" + hYears + "年（" + Math.round(hYears * 12) + "か月）",
+      custom: "任意の期間 " + num("customYears") + "年（" + Math.round(num("customYears") * 12) + "か月）"
+    };
+    $("periodHint").textContent = hints[period];
+    $("thHealth").textContent = "健康寿命との差（" + sexLabel + " " + Math.round(hYears * 12) + "か月）";
+    $("thCustom").textContent = "任意（" + Math.round(num("customYears") * 12) + "か月）";
+
+    var months = monthsFor(period);
+    var c = current();
+    var r = calc(c, months);
+
+    var needEl = $("need");
+    needEl.innerHTML = Math.round(r.need).toLocaleString("ja-JP") + "<small>万円</small>";
+    needEl.classList.toggle("ok", r.need === 0);
+    var st = $("status");
+    st.textContent = r.need === 0 ? "準備済みの資金で足ります" : "不足があります";
+    st.classList.toggle("ok", r.need === 0);
+
+    $("kMonths").textContent = months + "か月";
+    $("kMonthly").textContent = man1(r.monthly);
+    $("kShort").textContent = man1(r.short);
+    $("kTotal").textContent = man(r.total);
+
+    $("formula").innerHTML =
+      "一時金 <b>" + man1(c.initial) + "</b> ＋ 月々の不足 <b>" + man1(r.short) + "</b> × <b>" + months + "か月</b>" +
+      " − 準備済み <b>" + man(r.prepared) + "</b> ＝ <b>" + man(r.need) + "</b>" +
+      "<br>月額の合計＝施設 " + man1(c.monthly) + "＋介護保険 " + man1(r.kaigo) + "＋その他 " + man1(c.misc) +
+      "／年金・介護年金 " + man1(r.income);
+
+    var mH = monthsFor("health"), mC = monthsFor("custom");
+    var rows = courses.map(function (x) {
+      var a = calc(x, 55), h = calc(x, mH), cu = calc(x, mC);
+      return '<tr' + (x.id === c.id ? ' class="sel"' : '') + '><td>' + x.name + '</td><td>' + man1(a.monthly) +
+        '</td><td>' + man(a.need) + '</td><td>' + man(h.need) + '</td><td>' + man(cu.need) + '</td></tr>';
+    });
+    $("matrix").innerHTML = rows.join("");
+
+    var results = courses.map(function (x) { return { c: x, r: calc(x, months) }; });
+    var max = Math.max.apply(null, results.map(function (o) { return o.r.need; }).concat([1]));
+    $("bars").innerHTML = results.map(function (o) {
+      var w = (o.r.need / max * 100).toFixed(1);
+      return '<div class="bar' + (o.c.id === c.id ? ' sel' : '') + '"><span>' + o.c.name + '</span>' +
+        '<div class="track" role="img" aria-label="' + o.c.name + ' 必要保障額 ' + man(o.r.need) + '"><div class="fill" style="width:' + w + '%"></div></div>' +
+        '<b>' + man(o.r.need) + '</b></div>';
+    }).join("");
+
+    $("summary").value =
+      "【介護の必要保障額（試算）】\n" +
+      "希望する住まい：" + c.name + "\n" +
+      "介護期間：" + hints[period] + "\n" +
+      "月額の合計：" + man1(r.monthly) + "（施設 " + man1(c.monthly) + "／介護保険 " + man1(r.kaigo) + "／その他 " + man1(c.misc) + "）\n" +
+      "必要総額：" + man(r.total) + "（一時金 " + man1(c.initial) + " を含む）\n" +
+      "年金・介護年金からの充当：月 " + man1(r.income) + "\n" +
+      "準備済みの資金：" + man(r.prepared) + "\n" +
+      "必要保障額：" + man(r.need) + "\n" +
+      "※施設費用は宮城郡の相場（中央値）を基にした目安です。介護保険の自己負担は" + $("ratio").selectedOptions[0].text + "負担で計算しています。";
+    save();
+  }
+
+  // コース選択肢
+  $("course").innerHTML = courses.map(function (c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join("");
+  $("course").value = "take1";
+  load();
+  fillCourseFields();
+
+  document.querySelectorAll("input[name=sex], input[name=period]").forEach(function (el) { el.addEventListener("change", render); });
+  ["customYears", "ratio", "cap", "pension", "annuity", "savings", "lump"].forEach(function (id) { $(id).addEventListener("input", render); });
+  ["fInitial", "fMonthly", "fKaigo", "fMisc"].forEach(function (id) { $(id).addEventListener("input", function () { readCourseFields(); render(); }); });
+  $("course").addEventListener("change", function () { fillCourseFields(); render(); });
+  $("resetCourse").addEventListener("click", function () {
+    var c = current(), d = DEFAULTS.find(function (x) { return x.id === c.id; });
+    c.initial = d.initial; c.monthly = d.monthly; c.kaigo = d.kaigo; c.misc = d.misc;
+    fillCourseFields(); render();
+  });
+  $("copy").addEventListener("click", function () {
+    var t = $("summary").value, toast = $("toast");
+    var done = function () { toast.textContent = "コピーしました"; setTimeout(function () { toast.textContent = ""; }, 2500); };
+    var fallback = function () { $("summary").focus(); $("summary").select(); toast.textContent = "文章を選択しました。コピーしてください"; };
+    try { navigator.clipboard.writeText(t).then(done, fallback); } catch (e) { fallback(); }
+  });
+
+  render();
+})();
+</script>
