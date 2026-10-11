@@ -86,13 +86,16 @@ textarea { width: 100%; min-height: 150px; font: inherit; font-size: 13px; color
 .note { font-size: 12px; color: var(--muted); line-height: 1.7; }
 details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-size: 14px; }
 .toast { font-size: 13px; color: var(--accent); min-height: 1.4em; }
+.addarea { display: flex; flex-wrap: wrap; gap: 8px; }
+.addarea input { flex: 1 1 140px; min-width: 0; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; }
+.addarea input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: no-preference) { .fill { transition: width .25s ease; } }
 </style>
 
 <div class="wrap">
   <header>
     <h1>介護必要保障額シミュレーター</h1>
-    <p>住まいの選択（在宅・松竹梅）と介護期間から必要総額を出し、年金と準備済みの資金を差し引いて「必要保障額」を自動で計算します。初期値は宮城郡の相場（みんなの介護の中央値ほか）です。</p>
+    <p>住まいの選択（在宅・松竹梅）と介護期間から必要総額を出し、年金と準備済みの資金を差し引いて「必要保障額」を自動で計算します。エリアは宮城郡・仙台市・名取市・多賀城市・石巻市・宮城県全体から選べ（みんなの介護の中央値ほか）、ほかの地域は自分で追加できます。</p>
   </header>
 
   <div class="grid">
@@ -140,7 +143,18 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
       </section>
 
       <section class="card">
-        <h2>2. 希望する住まい</h2>
+        <h2>2. エリアと希望する住まい</h2>
+        <div class="row">
+          <label for="area">エリア</label>
+          <select id="area"></select>
+        </div>
+        <small class="hint" id="areaSrc"></small>
+        <div class="addarea">
+          <input type="text" id="newArea" placeholder="例：富谷市" aria-label="追加するエリア名">
+          <button type="button" class="ghost" id="addArea">エリアを追加</button>
+          <button type="button" class="ghost" id="delArea" hidden>このエリアを削除</button>
+        </div>
+        <small class="hint">追加したエリアは今のエリアの金額を引き継ぎます。みんなの介護で調べた中央値に書き換えてください。</small>
         <div class="row">
           <label for="course">コース</label>
           <select id="course"></select>
@@ -162,6 +176,7 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
           <div class="unit"><input type="number" id="fMisc" min="0" step="0.1"><span>万円</span></div>
         </div>
         <div class="actions"><button type="button" class="ghost" id="resetCourse">このコースを初期値に戻す</button></div>
+        <small class="hint">金額の書き換えは、選択中のエリアにだけ反映されます。</small>
       </section>
 
       <section class="card">
@@ -221,6 +236,17 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
       </section>
 
       <section class="card">
+        <h2 id="areaCmpTitle">エリア別の必要保障額</h2>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>エリア</th><th>施設の月額</th><th>月額の合計</th><th>必要総額</th><th>必要保障額</th></tr></thead>
+            <tbody id="areaCmp"></tbody>
+          </table>
+        </div>
+        <small class="hint">選択中のコースと期間、準備できているお金を同じにして、エリアだけを変えた結果です。</small>
+      </section>
+
+      <section class="card">
         <h2>提案書に貼る文章</h2>
         <textarea id="summary" readonly aria-label="提案書用の要約"></textarea>
         <div class="actions"><button type="button" id="copy">文章をコピー</button><span class="toast" id="toast"></span></div>
@@ -234,7 +260,7 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
             <p><b>必要総額</b>＝入居一時金・一時費用＋月額の合計×介護期間</p>
             <p><b>必要保障額</b>＝入居一時金・一時費用＋（月額の合計−年金充当額−介護年金）×介護期間−介護用の預貯金−保険の一時金（0未満は0）</p>
             <p><b>介護期間</b>：平均介護期間55か月（生命保険文化センター「2024年度 生命保険に関する全国実態調査」）。健康寿命との差は男性 約8.5年・女性 約11.6年（2022年の健康寿命と平均寿命の差、要確認）。</p>
-            <p><b>施設の相場（宮城郡）</b>：介護付き有料・住宅型有料・サ高住はみんなの介護の宮城郡の中央値。特養・老健はケアスル介護の松島町・七ヶ浜町の中央値の平均。在宅は全国平均（月5.2万円、一時費用47万円）。特上は仙台市中心部の高級ホームの価格帯から置いた仮定の値です。</p>
+            <p><b>施設の相場</b>：介護付き有料・住宅型有料・サ高住は、みんなの介護の各エリアの中央値です（掲載時期でずれがあるため目安）。特養・老健は、宮城郡のみケアスル介護の松島町・七ヶ浜町の中央値の平均で、ほかのエリアはみんなの介護の宮城県の特養の月額幅（8.6万〜13.1万円）の中間値10.9万円を仮に置いています。在宅は全国平均（月5.2万円、一時費用47万円）。特上は仙台市中心部の高級ホームの価格帯から置いた仮定の値で、全エリア共通です。</p>
             <p>介護保険の自己負担（1割時）は要介護3を想定した目安です。高額介護サービス費の上限額は世帯の状況で変わるため、最新の基準をご確認ください。</p>
           </div>
         </details>
@@ -246,38 +272,73 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
 <script>
 (function () {
   "use strict";
-  // 1割時の介護保険自己負担: kaigoBase。included=true は月額利用料に1割分が含まれる（特養・老健）
-  var DEFAULTS = [
-    { id: "home",  name: "在宅介護",           initial: 47,   monthly: 5.2,  kaigo: 0,   misc: 0, mode: "home" },
-    { id: "ume",   name: "梅：特養・老健",      initial: 0,    monthly: 8.9,  kaigo: 2.2, misc: 1, mode: "included" },
-    { id: "take1", name: "竹：住宅型有料",      initial: 0,    monthly: 12.7, kaigo: 2.7, misc: 1, mode: "add" },
-    { id: "take2", name: "竹：サ高住",          initial: 14.5, monthly: 16.6, kaigo: 2.7, misc: 1, mode: "add" },
-    { id: "matsu", name: "松：介護付き有料",    initial: 23,   monthly: 21.1, kaigo: 2.2, misc: 1, mode: "add" },
-    { id: "toku",  name: "特上：高級ホーム（仮定）", initial: 500, monthly: 33, kaigo: 2.2, misc: 2, mode: "add" }
+  // コースの型。kaigo＝1割時の介護保険自己負担の目安（要介護3）。mode: home=在宅（月額に含む）, included=特養・老健（1割分を含む）, add=上乗せ
+  var COURSES = [
+    { id: "home",  name: "在宅介護",                kaigo: 0,   misc: 0, mode: "home" },
+    { id: "ume",   name: "梅：特養・老健",           kaigo: 2.2, misc: 1, mode: "included" },
+    { id: "take1", name: "竹：住宅型有料",           kaigo: 2.7, misc: 1, mode: "add" },
+    { id: "take2", name: "竹：サ高住",               kaigo: 2.7, misc: 1, mode: "add" },
+    { id: "matsu", name: "松：介護付き有料",         kaigo: 2.2, misc: 1, mode: "add" },
+    { id: "toku",  name: "特上：高級ホーム（仮定）", kaigo: 2.2, misc: 2, mode: "add" }
+  ];
+  // エリア別の相場 [入居一時金, 月額]（万円）。在宅と特上は全エリア共通
+  var COMMON = { home: [47, 5.2], toku: [500, 33] };
+  var UME_PREF = [0, 10.9];
+  var PRESET_AREAS = [
+    { id: "miyagi-gun", name: "宮城郡（松島町・七ヶ浜町・利府町）", src: "みんなの介護 宮城郡の中央値。特養・老健はケアスル介護の松島町・七ヶ浜町の中央値の平均",
+      v: { ume: [0, 8.9], take1: [0, 12.7], take2: [14.5, 16.6], matsu: [23, 21.1] } },
+    { id: "sendai", name: "仙台市", src: "みんなの介護 仙台市の中央値。特養・老健は宮城県の月額幅の中間値（仮）",
+      v: { ume: UME_PREF, take1: [2, 13.9], take2: [16, 17.1], matsu: [30, 21.1] } },
+    { id: "natori", name: "名取市", src: "みんなの介護 名取市の中央値。特養・老健は宮城県の月額幅の中間値（仮）",
+      v: { ume: UME_PREF, take1: [9, 13.5], take2: [9.8, 16.8], matsu: [20.5, 20.3] } },
+    { id: "tagajo", name: "多賀城市", src: "みんなの介護 多賀城市の中央値（読み取りに不確かさあり、要確認）。特養・老健は宮城県の月額幅の中間値（仮）",
+      v: { ume: UME_PREF, take1: [3.7, 13.2], take2: [14.5, 16.9], matsu: [14.7, 21.1] } },
+    { id: "ishinomaki", name: "石巻市", src: "みんなの介護 石巻市の中央値（住宅型の一時金は市全体の中央値0円で代用）。特養・老健は宮城県の月額幅の中間値（仮）",
+      v: { ume: UME_PREF, take1: [0, 11.4], take2: [6.4, 15.8], matsu: [27.5, 21.1] } },
+    { id: "miyagi", name: "宮城県全体", src: "みんなの介護 宮城県の中央値。特養・老健は宮城県の月額幅の中間値（仮）",
+      v: { ume: UME_PREF, take1: [0, 10.9], take2: [2.8, 15.2], matsu: [30, 21.1] } }
   ];
   var HEALTH_GAP = { m: 8.5, f: 11.6 };
-  var STORE_KEY = "kaigo-need-sim-v1";
+  var STORE_KEY = "kaigo-need-sim-v2";
 
-  var courses = JSON.parse(JSON.stringify(DEFAULTS));
+  var customAreas = [];   // {id, name, src, v}
+  var overrides = {};     // overrides[areaId][courseId] = {initial, monthly, kaigo, misc}
+
   var $ = function (id) { return document.getElementById(id); };
   var num = function (id) { var v = parseFloat($(id).value); return isFinite(v) && v > 0 ? v : 0; };
   var man = function (v) { return Math.round(v).toLocaleString("ja-JP") + "万円"; };
   var man1 = function (v) { return (Math.round(v * 10) / 10).toLocaleString("ja-JP", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "万円"; };
-
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]; }); };
   function radio(name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : null; }
+
+  function areas() { return PRESET_AREAS.concat(customAreas); }
+  function areaById(id) { return areas().find(function (a) { return a.id === id; }) || PRESET_AREAS[0]; }
+  function courseDef(id) { return COURSES.find(function (c) { return c.id === id; }); }
+
+  function baseValues(area, courseId) {
+    var c = courseDef(courseId);
+    var pair = COMMON[courseId] || area.v[courseId] || [0, 0];
+    return { initial: pair[0], monthly: pair[1], kaigo: c.kaigo, misc: c.misc };
+  }
+  function values(areaId, courseId) {
+    var o = overrides[areaId] && overrides[areaId][courseId];
+    return o ? o : baseValues(areaById(areaId), courseId);
+  }
 
   function load() {
     try {
       var s = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
       if (!s) return;
-      if (Array.isArray(s.courses)) {
-        s.courses.forEach(function (c) {
-          var t = courses.find(function (x) { return x.id === c.id; });
-          if (t) ["initial", "monthly", "kaigo", "misc"].forEach(function (k) { if (typeof c[k] === "number") t[k] = c[k]; });
-        });
-      }
-      if (s.fields) Object.keys(s.fields).forEach(function (k) { if ($(k)) $(k).value = s.fields[k]; });
-      if (s.sex && $(s.sex === "f" ? "sexF" : "sexM")) $(s.sex === "f" ? "sexF" : "sexM").checked = true;
+      if (Array.isArray(s.customAreas)) customAreas = s.customAreas.filter(function (a) { return a && a.id && a.name && a.v; });
+      if (s.overrides && typeof s.overrides === "object") overrides = s.overrides;
+      renderAreaOptions();
+      if (s.fields) Object.keys(s.fields).forEach(function (k) {
+        var el = $(k);
+        if (!el) return;
+        if (el.tagName === "SELECT" && !Array.prototype.some.call(el.options, function (o) { return o.value === s.fields[k]; })) return;
+        el.value = s.fields[k];
+      });
+      if (s.sex) $(s.sex === "f" ? "sexF" : "sexM").checked = true;
       var pm = { avg: "pAvg", health: "pHealth", custom: "pCustom" };
       if (s.period && pm[s.period]) $(pm[s.period]).checked = true;
     } catch (e) { /* 保存なしで動作 */ }
@@ -285,8 +346,8 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
   function save() {
     try {
       var fields = {};
-      ["customYears", "ratio", "cap", "course", "pension", "annuity", "savings", "lump"].forEach(function (k) { fields[k] = $(k).value; });
-      localStorage.setItem(STORE_KEY, JSON.stringify({ courses: courses, fields: fields, sex: radio("sex"), period: radio("period") }));
+      ["customYears", "ratio", "cap", "area", "course", "pension", "annuity", "savings", "lump"].forEach(function (k) { fields[k] = $(k).value; });
+      localStorage.setItem(STORE_KEY, JSON.stringify({ customAreas: customAreas, overrides: overrides, fields: fields, sex: radio("sex"), period: radio("period") }));
     } catch (e) { /* 保存できない環境でも計算は続ける */ }
   }
 
@@ -296,46 +357,60 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
     return Math.round(num("customYears") * 12);
   }
 
-  function kaigoCost(c, ratio, cap) {
-    if (c.mode === "home") return 0;
-    var full = Math.min(c.kaigo * ratio, cap);
-    if (c.mode === "included") return Math.max(full - Math.min(c.kaigo, cap), 0);
+  function kaigoCost(def, v, ratio, cap) {
+    if (def.mode === "home") return 0;
+    var full = Math.min(v.kaigo * ratio, cap);
+    if (def.mode === "included") return Math.max(full - Math.min(v.kaigo, cap), 0);
     return full;
   }
 
-  function calc(c, months) {
+  function calc(areaId, courseId, months) {
+    var def = courseDef(courseId), v = values(areaId, courseId);
     var ratio = parseInt($("ratio").value, 10) || 1;
     var cap = parseFloat($("cap").value) || 4.44;
-    var kaigo = kaigoCost(c, ratio, cap);
-    var monthly = c.monthly + kaigo + c.misc;
+    var kaigo = kaigoCost(def, v, ratio, cap);
+    var monthly = v.monthly + kaigo + v.misc;
     var income = num("pension") + num("annuity");
     var short = Math.max(monthly - income, 0);
-    var total = c.initial + monthly * months;
+    var total = v.initial + monthly * months;
     var prepared = num("savings") + num("lump");
-    var need = Math.max(c.initial + short * months - prepared, 0);
-    return { kaigo: kaigo, monthly: monthly, short: short, total: total, need: need, prepared: prepared, income: income };
+    var need = Math.max(v.initial + short * months - prepared, 0);
+    return { v: v, kaigo: kaigo, monthly: monthly, short: short, total: total, need: need, prepared: prepared, income: income };
   }
 
-  function current() { return courses.find(function (c) { return c.id === $("course").value; }) || courses[0]; }
+  function renderAreaOptions() {
+    var cur = $("area").value;
+    $("area").innerHTML = areas().map(function (a) { return '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>'; }).join("");
+    if (cur && areas().some(function (a) { return a.id === cur; })) $("area").value = cur;
+  }
 
   function fillCourseFields() {
-    var c = current();
-    $("fInitial").value = c.initial;
-    $("fMonthly").value = c.monthly;
-    $("fKaigo").value = c.kaigo;
-    $("fMisc").value = c.misc;
-    var home = c.mode === "home";
+    var areaId = $("area").value, courseId = $("course").value;
+    var def = courseDef(courseId), v = values(areaId, courseId);
+    $("fInitial").value = v.initial;
+    $("fMonthly").value = v.monthly;
+    $("fKaigo").value = v.kaigo;
+    $("fMisc").value = v.misc;
+    var home = def.mode === "home";
     $("fKaigo").disabled = home;
-    $("monthlyNote").textContent = home ? "全国平均。介護保険の自己負担を含む" : (c.mode === "included" ? "1割分の介護費を含む" : "介護保険の自己負担は含まない");
-    $("kaigoNote").textContent = home ? "在宅は月額に含む" : (c.mode === "included" ? "2割・3割で増える分を加算" : "要介護3の目安");
+    $("monthlyNote").textContent = home ? "全国平均。介護保険の自己負担を含む" : (def.mode === "included" ? "1割分の介護費を含む" : "介護保険の自己負担は含まない");
+    $("kaigoNote").textContent = home ? "在宅は月額に含む" : (def.mode === "included" ? "2割・3割で増える分を加算" : "要介護3の目安");
+    var area = areaById(areaId);
+    var edited = overrides[areaId] && Object.keys(overrides[areaId]).length > 0;
+    $("areaSrc").textContent = "出典：" + area.src + (edited ? "（一部の金額を書き換え済み）" : "");
+    $("delArea").hidden = !area.custom;
   }
 
   function readCourseFields() {
-    var c = current();
-    c.initial = num("fInitial");
-    c.monthly = num("fMonthly");
-    if (c.mode !== "home") c.kaigo = num("fKaigo");
-    c.misc = num("fMisc");
+    var areaId = $("area").value, courseId = $("course").value;
+    var def = courseDef(courseId), prev = values(areaId, courseId);
+    overrides[areaId] = overrides[areaId] || {};
+    overrides[areaId][courseId] = {
+      initial: num("fInitial"),
+      monthly: num("fMonthly"),
+      kaigo: def.mode === "home" ? prev.kaigo : num("fKaigo"),
+      misc: num("fMisc")
+    };
   }
 
   function render() {
@@ -353,8 +428,9 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
     $("thCustom").textContent = "任意（" + Math.round(num("customYears") * 12) + "か月）";
 
     var months = monthsFor(period);
-    var c = current();
-    var r = calc(c, months);
+    var areaId = $("area").value, courseId = $("course").value;
+    var area = areaById(areaId), def = courseDef(courseId);
+    var r = calc(areaId, courseId, months);
 
     var needEl = $("need");
     needEl.innerHTML = Math.round(r.need).toLocaleString("ja-JP") + "<small>万円</small>";
@@ -369,43 +445,52 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
     $("kTotal").textContent = man(r.total);
 
     $("formula").innerHTML =
-      "一時金 <b>" + man1(c.initial) + "</b> ＋ 月々の不足 <b>" + man1(r.short) + "</b> × <b>" + months + "か月</b>" +
+      "一時金 <b>" + man1(r.v.initial) + "</b> ＋ 月々の不足 <b>" + man1(r.short) + "</b> × <b>" + months + "か月</b>" +
       " − 準備済み <b>" + man(r.prepared) + "</b> ＝ <b>" + man(r.need) + "</b>" +
-      "<br>月額の合計＝施設 " + man1(c.monthly) + "＋介護保険 " + man1(r.kaigo) + "＋その他 " + man1(c.misc) +
+      "<br>月額の合計＝施設 " + man1(r.v.monthly) + "＋介護保険 " + man1(r.kaigo) + "＋その他 " + man1(r.v.misc) +
       "／年金・介護年金 " + man1(r.income);
 
     var mH = monthsFor("health"), mC = monthsFor("custom");
-    var rows = courses.map(function (x) {
-      var a = calc(x, 55), h = calc(x, mH), cu = calc(x, mC);
-      return '<tr' + (x.id === c.id ? ' class="sel"' : '') + '><td>' + x.name + '</td><td>' + man1(a.monthly) +
+    $("matrix").innerHTML = COURSES.map(function (c) {
+      var a = calc(areaId, c.id, 55), h = calc(areaId, c.id, mH), cu = calc(areaId, c.id, mC);
+      return '<tr' + (c.id === courseId ? ' class="sel"' : '') + '><td>' + c.name + '</td><td>' + man1(a.monthly) +
         '</td><td>' + man(a.need) + '</td><td>' + man(h.need) + '</td><td>' + man(cu.need) + '</td></tr>';
-    });
-    $("matrix").innerHTML = rows.join("");
+    }).join("");
 
-    var results = courses.map(function (x) { return { c: x, r: calc(x, months) }; });
+    var results = COURSES.map(function (c) { return { c: c, r: calc(areaId, c.id, months) }; });
     var max = Math.max.apply(null, results.map(function (o) { return o.r.need; }).concat([1]));
     $("bars").innerHTML = results.map(function (o) {
       var w = (o.r.need / max * 100).toFixed(1);
-      return '<div class="bar' + (o.c.id === c.id ? ' sel' : '') + '"><span>' + o.c.name + '</span>' +
+      return '<div class="bar' + (o.c.id === courseId ? ' sel' : '') + '"><span>' + o.c.name + '</span>' +
         '<div class="track" role="img" aria-label="' + o.c.name + ' 必要保障額 ' + man(o.r.need) + '"><div class="fill" style="width:' + w + '%"></div></div>' +
         '<b>' + man(o.r.need) + '</b></div>';
     }).join("");
 
+    $("areaCmpTitle").textContent = "エリア別の必要保障額（" + def.name + "・" + months + "か月）";
+    $("areaCmp").innerHTML = areas().map(function (a) {
+      var x = calc(a.id, courseId, months);
+      return '<tr' + (a.id === areaId ? ' class="sel"' : '') + '><td>' + esc(a.name) + '</td><td>' + man1(x.v.monthly) + '</td><td>' + man1(x.monthly) +
+        '</td><td>' + man(x.total) + '</td><td>' + man(x.need) + '</td></tr>';
+    }).join("");
+
     $("summary").value =
       "【介護の必要保障額（試算）】\n" +
-      "希望する住まい：" + c.name + "\n" +
+      "エリア：" + area.name + "\n" +
+      "希望する住まい：" + def.name + "\n" +
       "介護期間：" + hints[period] + "\n" +
-      "月額の合計：" + man1(r.monthly) + "（施設 " + man1(c.monthly) + "／介護保険 " + man1(r.kaigo) + "／その他 " + man1(c.misc) + "）\n" +
-      "必要総額：" + man(r.total) + "（一時金 " + man1(c.initial) + " を含む）\n" +
+      "月額の合計：" + man1(r.monthly) + "（施設 " + man1(r.v.monthly) + "／介護保険 " + man1(r.kaigo) + "／その他 " + man1(r.v.misc) + "）\n" +
+      "必要総額：" + man(r.total) + "（一時金 " + man1(r.v.initial) + " を含む）\n" +
       "年金・介護年金からの充当：月 " + man1(r.income) + "\n" +
       "準備済みの資金：" + man(r.prepared) + "\n" +
       "必要保障額：" + man(r.need) + "\n" +
-      "※施設費用は宮城郡の相場（中央値）を基にした目安です。介護保険の自己負担は" + $("ratio").selectedOptions[0].text + "負担で計算しています。";
+      "※施設費用は" + area.name + "の相場（中央値）を基にした目安です。介護保険の自己負担は" + $("ratio").selectedOptions[0].text + "負担で計算しています。";
     save();
   }
 
-  // コース選択肢
-  $("course").innerHTML = courses.map(function (c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join("");
+  // 初期化
+  $("course").innerHTML = COURSES.map(function (c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join("");
+  renderAreaOptions();
+  $("area").value = "miyagi-gun";
   $("course").value = "take1";
   load();
   fillCourseFields();
@@ -414,11 +499,46 @@ details summary { cursor: pointer; color: var(--accent); font-weight: 700; font-
   ["customYears", "ratio", "cap", "pension", "annuity", "savings", "lump"].forEach(function (id) { $(id).addEventListener("input", render); });
   ["fInitial", "fMonthly", "fKaigo", "fMisc"].forEach(function (id) { $(id).addEventListener("input", function () { readCourseFields(); render(); }); });
   $("course").addEventListener("change", function () { fillCourseFields(); render(); });
+  $("area").addEventListener("change", function () { fillCourseFields(); render(); });
+
   $("resetCourse").addEventListener("click", function () {
-    var c = current(), d = DEFAULTS.find(function (x) { return x.id === c.id; });
-    c.initial = d.initial; c.monthly = d.monthly; c.kaigo = d.kaigo; c.misc = d.misc;
+    var areaId = $("area").value, courseId = $("course").value;
+    if (overrides[areaId]) delete overrides[areaId][courseId];
     fillCourseFields(); render();
   });
+
+  $("addArea").addEventListener("click", function () {
+    var name = $("newArea").value.trim();
+    var toast = $("toast");
+    if (!name) { $("newArea").focus(); return; }
+    var from = $("area").value, fromArea = areaById(from);
+    var v = {};
+    ["ume", "take1", "take2", "matsu"].forEach(function (k) { var x = values(from, k); v[k] = [x.initial, x.monthly]; });
+    var id = "custom-" + Date.now();
+    customAreas.push({ id: id, name: name, src: "自分で入力（" + fromArea.name + "の金額を引き継ぎ）", v: v, custom: true });
+    // 介護保険・雑費の書き換えも引き継ぐ
+    if (overrides[from]) {
+      overrides[id] = {};
+      Object.keys(overrides[from]).forEach(function (k) {
+        overrides[id][k] = Object.assign({}, overrides[from][k]);
+      });
+    }
+    $("newArea").value = "";
+    renderAreaOptions();
+    $("area").value = id;
+    fillCourseFields(); render();
+    toast.textContent = "";
+  });
+
+  $("delArea").addEventListener("click", function () {
+    var id = $("area").value;
+    customAreas = customAreas.filter(function (a) { return a.id !== id; });
+    delete overrides[id];
+    renderAreaOptions();
+    $("area").value = PRESET_AREAS[0].id;
+    fillCourseFields(); render();
+  });
+
   $("copy").addEventListener("click", function () {
     var t = $("summary").value, toast = $("toast");
     var done = function () { toast.textContent = "コピーしました"; setTimeout(function () { toast.textContent = ""; }, 2500); };
