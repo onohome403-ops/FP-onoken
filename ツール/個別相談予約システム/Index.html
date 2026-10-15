@@ -52,23 +52,35 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; colo
 .step b { display: inline-grid; place-items: center; width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: .95rem; }
 .muted { color: var(--muted); font-size: .9rem; }
 
-/* 日付：横スクロールのチップ */
-.days { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x proximity; }
-.day { flex: 0 0 auto; min-width: 68px; scroll-snap-align: start; text-align: center; padding: 8px 6px; border-radius: 16px;
-  border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; cursor: pointer; }
-.day .d { display: block; font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
-.day .n { display: block; font-size: .75rem; color: var(--muted); }
-.day.sat .d { color: var(--sat); } .day.sun .d { color: var(--sun); }
-.day[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
-.day[aria-pressed="true"] .d, .day[aria-pressed="true"] .n { color: var(--accent-ink); }
+/* 日付：月カレンダー。予約できる日だけ押せる */
+.mc-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.mc-title { font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.mc-nav { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--accent-line); background: var(--panel); color: var(--accent);
+  font: inherit; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: grid; place-items: center; }
+.mc-nav:disabled { border-color: var(--line); color: var(--line); cursor: default; }
+.mc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.mc-wd { text-align: center; font-size: .78rem; color: var(--muted); padding-bottom: 2px; }
+.mc-wd.sun { color: var(--sun); } .mc-wd.sat { color: var(--sat); }
+.mc-day { min-height: 52px; border-radius: 14px; border: 0; background: transparent; color: var(--muted); font: inherit;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px 0; opacity: .45; }
+.mc-day .d { font-size: 1rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.mc-day .n { font-size: .68rem; line-height: 1.2; }
+button.mc-day { opacity: 1; background: var(--accent-soft); color: var(--ink); font-weight: 700; cursor: pointer; }
+button.mc-day .n { color: var(--accent); font-weight: 500; }
+button.mc-day.sun .d { color: var(--sun); } button.mc-day.sat .d { color: var(--sat); }
+button.mc-day:hover { background: var(--accent-line); }
+button.mc-day[aria-pressed="true"], button.mc-day[aria-pressed="true"] .d, button.mc-day[aria-pressed="true"] .n { background: var(--accent); color: var(--accent-ink); }
+.mc-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 10px 0 0; font-size: .8rem; color: var(--muted); }
+.mc-legend i { display: inline-block; width: .9em; height: .9em; border-radius: 4px; background: var(--accent-soft); vertical-align: -1px; margin-right: 4px; }
+#slotDate { color: var(--accent); }
 
 /* 時間枠 */
 .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 8px; }
 .slot { padding: 12px 8px; border-radius: 999px; border: 1.5px solid var(--accent-line); background: var(--panel); color: var(--accent);
   font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
 .slot:hover { background: var(--accent-soft); }
-.day, .slot, .btn, .chips label { transition: background-color .2s, border-color .2s, color .2s; }
-@media (prefers-reduced-motion: reduce) { .day, .slot, .btn, .chips label { transition: none; } }
+button.mc-day, .slot, .btn, .chips label { transition: background-color .2s, border-color .2s, color .2s; }
+@media (prefers-reduced-motion: reduce) { button.mc-day, .slot, .btn, .chips label { transition: none; } }
 .slot[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
 /* フォーム */
@@ -107,12 +119,20 @@ textarea { min-height: 96px; resize: vertical; }
   <section id="pick">
     <div class="panel">
       <p class="step"><b>1</b>日付を選ぶ</p>
-      <div id="days" class="days" role="group" aria-label="日付"></div>
+      <div id="cal" hidden>
+        <div class="mc-head">
+          <button type="button" class="mc-nav" id="prevMonth" aria-label="前の月">‹</button>
+          <span class="mc-title" id="monthLabel"></span>
+          <button type="button" class="mc-nav" id="nextMonth" aria-label="次の月">›</button>
+        </div>
+        <div class="mc-grid" id="calGrid" role="group" aria-label="日付"></div>
+        <p class="mc-legend"><span><i></i>ご予約いただける日（数字は空き枠数）</span></p>
+      </div>
       <div id="loading" class="loading">空き状況を確認しています…</div>
       <div id="empty" class="empty" hidden>現在ご予約いただける枠がありません。<br>お手数ですが、直接ご連絡ください。</div>
     </div>
     <div class="panel" id="slotPanel" hidden>
-      <p class="step"><b>2</b>時間を選ぶ<span class="muted" id="slotMinutes"></span></p>
+      <p class="step"><b>2</b>時間を選ぶ<span id="slotDate"></span><span class="muted" id="slotMinutes"></span></p>
       <div id="slots" class="slots" role="group" aria-label="時間"></div>
     </div>
   </section>
@@ -167,6 +187,9 @@ textarea { min-height: 96px; resize: vertical; }
 const CONFIG = <?!= JSON.stringify(config) ?>;
 const $ = id => document.getElementById(id);
 let days = [];
+let months = [];     // 予約できる日がある月（'2026-10' 形式）
+let viewMonth = '';
+let pickedIndex = -1;
 let selected = null; // { start, label, dayLabel }
 
 $('title').textContent = CONFIG.title;
@@ -186,7 +209,7 @@ function esc(s) {
 function loadSlots() {
   $('loading').hidden = false;
   $('empty').hidden = true;
-  $('days').innerHTML = '';
+  $('cal').hidden = true;
   $('slotPanel').hidden = true;
   google.script.run
     .withSuccessHandler(res => { days = res; renderDays(); })
@@ -197,19 +220,54 @@ function loadSlots() {
 function renderDays() {
   $('loading').hidden = true;
   if (!days.length) { $('empty').hidden = false; return; }
-  $('days').innerHTML = days.map((d, i) => {
-    const w = d.label.slice(-2, -1);
-    const cls = w === '土' ? ' sat' : w === '日' ? ' sun' : '';
-    return `<button type="button" class="day${cls}" data-i="${i}" aria-pressed="false">
-      <span class="d">${esc(d.label)}</span><span class="n">残り${d.slots.length}枠</span></button>`;
-  }).join('');
-  $('days').querySelectorAll('.day').forEach(b => b.addEventListener('click', () => pickDay(Number(b.dataset.i))));
+  months = [...new Set(days.map(d => d.date.slice(0, 7)))];
+  $('cal').hidden = false;
   pickDay(0);
 }
 
+function renderCalendar() {
+  const [y, m] = viewMonth.split('-').map(Number);
+  const firstWd = new Date(Date.UTC(y, m - 1, 1)).getUTCDay();
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const indexByDate = {};
+  days.forEach((d, i) => { indexByDate[d.date] = i; });
+
+  const cells = ['日', '月', '火', '水', '木', '金', '土'].map((w, k) =>
+    `<span class="mc-wd${k === 0 ? ' sun' : k === 6 ? ' sat' : ''}">${w}</span>`);
+  for (let k = 0; k < firstWd; k++) cells.push('<span></span>');
+  for (let day = 1; day <= lastDay; day++) {
+    const ymd = `${viewMonth}-${String(day).padStart(2, '0')}`;
+    const wd = (firstWd + day - 1) % 7;
+    const cls = wd === 0 ? ' sun' : wd === 6 ? ' sat' : '';
+    const i = indexByDate[ymd];
+    cells.push(i === undefined
+      ? `<span class="mc-day${cls}"><span class="d">${day}</span></span>`
+      : `<button type="button" class="mc-day${cls}" data-i="${i}" aria-pressed="${i === pickedIndex}" aria-label="${esc(days[i].label)} 空き${days[i].slots.length}枠">
+          <span class="d">${day}</span><span class="n">${days[i].slots.length}枠</span></button>`);
+  }
+  $('calGrid').innerHTML = cells.join('');
+  $('calGrid').querySelectorAll('button.mc-day').forEach(b => b.addEventListener('click', () => pickDay(Number(b.dataset.i))));
+  $('monthLabel').textContent = `${y}年${m}月`;
+  const pos = months.indexOf(viewMonth);
+  $('prevMonth').disabled = pos <= 0;
+  $('nextMonth').disabled = pos >= months.length - 1;
+}
+
+$('prevMonth').addEventListener('click', () => moveMonth(-1));
+$('nextMonth').addEventListener('click', () => moveMonth(1));
+function moveMonth(step) {
+  const next = months[months.indexOf(viewMonth) + step];
+  if (!next) return;
+  // 月を移ったら、その月の最初の予約できる日を選ぶ
+  pickDay(days.findIndex(d => d.date.startsWith(next)));
+}
+
 function pickDay(i) {
-  $('days').querySelectorAll('.day').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.i) === i)));
+  pickedIndex = i;
   const d = days[i];
+  viewMonth = d.date.slice(0, 7);
+  renderCalendar();
+  $('slotDate').textContent = d.label;
   $('slots').innerHTML = d.slots.map((s, j) =>
     `<button type="button" class="slot" data-j="${j}" aria-pressed="false">${esc(s.label)}</button>`).join('');
   $('slots').querySelectorAll('.slot').forEach(b => b.addEventListener('click', () => {
