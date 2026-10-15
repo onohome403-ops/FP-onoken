@@ -25,7 +25,10 @@ const CONFIG = {
     5: ['9:00', '10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'], // 金
     6: ['9:00', '10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'], // 土
   },
-  SLOT_MINUTES: 90,
+  // お客様に見せる相談時間（分）。カレンダー・Zoomもこの長さで作成
+  SLOT_MINUTES: 60,
+  // 相談後に確保する準備・休憩時間（分）。この時間に予定がある枠も予約不可にする
+  PREP_MINUTES_AFTER: 30,
 
   // 終日受付しない日：第n◯曜日（例：第1・第3月曜日）
   CLOSED_NTH_WEEKDAYS: [
@@ -115,7 +118,7 @@ function bookSlot(form) {
       throw new Error('この枠は受付対象外です。画面を更新して別の枠をお選びください。');
     }
     // ロック中に最新のカレンダーで空きを再確認（ダブルブッキング防止）
-    const busy = getBusyIntervals_(slot.start, slot.end);
+    const busy = getBusyIntervals_(slot.start, slot.blockEnd);
     if (filterFreeSlots_([slot], busy, CONFIG.BUFFER_MINUTES).length === 0) {
       throw new Error('申し訳ありません。この枠は直前に埋まりました。別の枠をお選びください。');
     }
@@ -171,7 +174,8 @@ function buildCandidateSlots_(now, cfg) {
       const start = jstDate_(ymd, hm);
       if (start.getTime() < earliest) return;
       const end = new Date(start.getTime() + cfg.SLOT_MINUTES * 60 * 1000);
-      slots.push({ ymd: ymd, hm: hm, start: start, end: end });
+      const blockEnd = new Date(end.getTime() + (cfg.PREP_MINUTES_AFTER || 0) * 60 * 1000);
+      slots.push({ ymd: ymd, hm: hm, start: start, end: end, blockEnd: blockEnd });
     });
   }
   return slots;
@@ -184,11 +188,11 @@ function isClosedDay_(ymd, cfg) {
   return cfg.CLOSED_NTH_WEEKDAYS.some(rule => rule.weekday === weekday && rule.nth.indexOf(nth) !== -1);
 }
 
-/** busy区間（前後バッファ込み）と1分でも重なる枠を除外 */
+/** busy区間（前後バッファ込み）と、相談時間＋準備時間が1分でも重なる枠を除外 */
 function filterFreeSlots_(slots, busy, bufferMinutes) {
   const buf = (bufferMinutes || 0) * 60 * 1000;
   return slots.filter(s => !busy.some(b =>
-    b.start.getTime() < s.end.getTime() + buf && b.end.getTime() > s.start.getTime() - buf
+    b.start.getTime() < (s.blockEnd || s.end).getTime() + buf && b.end.getTime() > s.start.getTime() - buf
   ));
 }
 
