@@ -68,6 +68,11 @@ const CONFIG = {
   //   ZOOM_ACCOUNT_ID / ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET（必須）
   //   ZOOM_USER_ID（任意。未設定なら 'me'。うまくいかない時は自分のZoomのメールアドレス）
   ZOOM_ENABLED: true,
+
+  // リマインドメール：相談開始の何時間前に送るか（setupReminder を一度実行すると有効になる）
+  REMIND_HOURS_BEFORE: 24,
+  // 予約からこの時間以内に始まる相談は、確認メールを送ったばかりなのでリマインドを省略
+  REMIND_SKIP_IF_BOOKED_WITHIN_HOURS: 12,
 };
 
 /* ===================== Web画面 ===================== */
@@ -144,7 +149,15 @@ function bookSlot(form) {
         location: zoom ? zoom.joinUrl : '',
       });
       event.setTag('booking', 'web');
-      if (zoom) event.setTag('zoomMeetingId', String(zoom.id));
+      // リマインドメール用にお客様情報とZoom情報を予定に保存
+      event.setTag('customerName', data.name);
+      event.setTag('customerEmail', data.email);
+      event.setTag('method', data.method);
+      if (zoom) {
+        event.setTag('zoomMeetingId', String(zoom.id));
+        event.setTag('zoomJoinUrl', zoom.joinUrl);
+        event.setTag('zoomPassword', zoom.password);
+      }
     } catch (e) {
       if (zoom) deleteZoomMeeting_(zoom.id); // 予定を作れなかったら発行したZoomも取り消す
       throw e;
@@ -304,6 +317,88 @@ function sendMails_(d, when, zoom, zoomError) {
   });
 }
 
+/* ===================== リマインドメール ===================== */
+
+/**
+ * 1時間ごとに自動実行。REMIND_HOURS_BEFORE 時間以内に始まるWeb予約で、
+ * まだリマインドを送っていないものにメールを送る。
+ * 日時をカレンダー上で動かした場合も、動かした後の日時で送られる。予定を消せば送られない。
+ */
+function sendReminders() {
+  const now = new Date();
+  const until = new Date(now.getTime() + CONFIG.REMIND_HOURS_BEFORE * 3600 * 1000);
+  const skipWithin = CONFIG.REMIND_SKIP_IF_BOOKED_WITHIN_HOURS * 3600 * 1000;
+  const ownerEmail = CONFIG.OWNER_NOTIFY_EMAIL || Session.getEffectiveUser().getEmail();
+
+  getCalendar_(CONFIG.BOOKING_CALENDAR_ID).getEvents(now, until).forEach(ev => {
+    if (ev.getTag('booking') !== 'web' || ev.getTag('reminded')) return;
+    if (ev.getStartTime().getTime() < now.getTime()) return; // すでに始まっている
+    const email = ev.getTag('customerEmail');
+    if (!email) return;
+
+    // 直前の予約は確認メールで十分なので送らない
+    if (ev.getStartTime().getTime() - ev.getDateCreated().getTime() < skipWithin) {
+      ev.setTag('reminded', 'skipped');
+      return;
+    }
+
+    const when = formatRangeLabel_(ev.getStartTime(), ev.getEndTime());
+    const zoom = ev.getTag('zoomJoinUrl')
+      ? { id: ev.getTag('zoomMeetingId'), joinUrl: ev.getTag('zoomJoinUrl'), password: ev.getTag('zoomPassword') }
+      : null;
+
+    try {
+      MailApp.sendEmail({
+        to: email,
+        replyTo: ownerEmail,
+        name: CONFIG.OWNER_NAME,
+        subject: `【リマインド】個別相談 ${when}`,
+        body: [
+          `${ev.getTag('customerName') || ''} 様`,
+          '',
+          'ご予約いただいている個別相談のご案内です。',
+          'お会いできることを楽しみにしております。',
+          '',
+          `日時：${when}`,
+          `相談方法：${ev.getTag('method') || 'オンライン'}`,
+          '',
+          zoom
+            ? `当日は以下のZoomからご参加ください。\n\n${buildZoomText_(zoom)}\n\n開始5分前からご入室いただけます。\nZoomアプリを入れていない場合は、事前にインストールしておくとスムーズです。`
+            : '接続方法は別途ご連絡しているご案内をご確認ください。',
+          '',
+          '【当日あるとスムーズなもの】',
+          '・現在ご加入中の保険証券（お手元にあれば）',
+          '・メモをとれるもの',
+          '',
+          'ご都合が悪くなった場合は、このメールにご返信ください。',
+          '',
+          CONFIG.OWNER_NAME,
+        ].join('\n'),
+      });
+      ev.setTag('reminded', new Date().toISOString());
+    } catch (e) {
+      console.error(`リマインド送信失敗（${when}）: ${e}`);
+    }
+  });
+}
+
+/** 最初に一度だけ実行：sendReminders を1時間ごとに自動実行する設定を作る（何度実行しても1つだけ） */
+function setupReminder() {
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'sendReminders')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('sendReminders').timeBased().everyHours(1).create();
+  Logger.log('リマインドメールの自動送信を設定しました（1時間ごとにチェック）');
+}
+
+/** リマインドを止めたいとき */
+function stopReminder() {
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === 'sendReminders')
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  Logger.log('リマインドメールの自動送信を停止しました');
+}
+
 /* ===================== Zoom ===================== */
 
 /** Server-to-Server OAuth のアクセストークン（約1時間有効なので50分キャッシュ） */
@@ -436,6 +531,10 @@ function hmOf_(date) {
 function formatDayLabel_(ymd) {
   const w = '日月火水木金土'[weekdayOf_(ymd)];
   return `${Number(ymd.slice(5, 7))}/${Number(ymd.slice(8, 10))}(${w})`;
+}
+
+function formatRangeLabel_(start, end) {
+  return formatSlotLabel_({ ymd: ymdInTz_(start, CONFIG.TIME_ZONE), hm: hmOf_(start), end: end });
 }
 
 function formatSlotLabel_(slot) {
