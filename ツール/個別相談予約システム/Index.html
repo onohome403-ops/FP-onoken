@@ -5,81 +5,90 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Old+Mincho:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap">
 <style>
-/* Layout: 1カラム。①日付を選ぶ → ②時間を選ぶ → ③お客様情報 → 完了。スマホ（LINEから開く）前提 */
+/* Layout: 1カラム。①日付を選ぶ → ②時間を選ぶ → ③お客様情報 → 完了。スマホ（LINEから開く）前提
+   Tone: 若葉色を基調にした、目に優しいやわらかい配色＋丸ゴシック */
 :root {
-  --bg: #F3F5F4;
-  --panel: #FFFFFF;
-  --ink: #17262E;
-  --muted: #55646C;
-  --line: #D5DCDA;
-  --accent: #1F6F6A;
+  --bg: #F1F6EF;          /* ごく淡いセージ */
+  --panel: #FCFEFB;       /* 生成りがかった白 */
+  --ink: #33443A;         /* 真っ黒を避けた深緑グレー */
+  --muted: #6C7F72;
+  --line: #D9E7D7;
+  --accent: #3F8A5E;      /* 落ち着いた若葉色 */
   --accent-ink: #FFFFFF;
-  --accent-soft: #E1EFEC;
-  --warn: #A4541B;
-  --warn-soft: #F7EADF;
-  --font-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
-  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  --accent-soft: #E4F1E3;
+  --accent-line: #A9CFAF;
+  --sat: #4F7FA8;
+  --sun: #BF6458;
+  --warn: #A9693A;
+  --warn-soft: #FAEFE3;
+  --shadow: 0 2px 10px rgba(63, 110, 80, .07);
+  --font-display: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", sans-serif;
+  --font-body: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "BIZ UDPGothic", "Meiryo", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #11191D; --panel: #18242A; --ink: #E6EEEC; --muted: #9DB0B4; --line: #2C3D44;
-    --accent: #6FC2B9; --accent-ink: #0E1A1C; --accent-soft: #1D3634; --warn: #F0A56B; --warn-soft: #3A2A1E;
+    --bg: #162019; --panel: #1D2A22; --ink: #E2EDE4; --muted: #A0B6A7; --line: #2F4436;
+    --accent: #8DCB9E; --accent-ink: #13221A; --accent-soft: #233A2B; --accent-line: #4C7A5A;
+    --sat: #8DB5DA; --sun: #E5998E; --warn: #E8B07A; --warn-soft: #3A2D20; --shadow: none;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #11191D; --panel: #18242A; --ink: #E6EEEC; --muted: #9DB0B4; --line: #2C3D44;
-  --accent: #6FC2B9; --accent-ink: #0E1A1C; --accent-soft: #1D3634; --warn: #F0A56B; --warn-soft: #3A2A1E;
+  --bg: #162019; --panel: #1D2A22; --ink: #E2EDE4; --muted: #A0B6A7; --line: #2F4436;
+  --accent: #8DCB9E; --accent-ink: #13221A; --accent-soft: #233A2B; --accent-line: #4C7A5A;
+  --sat: #8DB5DA; --sun: #E5998E; --warn: #E8B07A; --warn-soft: #3A2D20; --shadow: none;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
-body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-weight: 500; font-size: 16px; line-height: 1.75; letter-spacing: .02em; }
 .wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
-h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 4px; letter-spacing: .02em; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; color: var(--accent); margin: 0 0 6px; letter-spacing: .04em; text-wrap: balance; }
 .lead { color: var(--muted); margin: 0 0 24px; font-size: .95rem; }
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 16px; margin-bottom: 16px; }
-.step { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-weight: 700; }
-.step b { font-family: var(--font-display); color: var(--accent); font-size: 1.1rem; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 22px 18px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.step { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-weight: 700; }
+.step b { display: inline-grid; place-items: center; width: 1.7em; height: 1.7em; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: .95rem; }
 .muted { color: var(--muted); font-size: .9rem; }
 
 /* 日付：横スクロールのチップ */
 .days { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x proximity; }
-.day { flex: 0 0 auto; min-width: 68px; scroll-snap-align: start; text-align: center; padding: 8px 6px; border-radius: 10px;
+.day { flex: 0 0 auto; min-width: 68px; scroll-snap-align: start; text-align: center; padding: 8px 6px; border-radius: 16px;
   border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; cursor: pointer; }
 .day .d { display: block; font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 .day .n { display: block; font-size: .75rem; color: var(--muted); }
-.day.sat .d { color: #3A6EA5; } .day.sun .d { color: #B5473A; }
+.day.sat .d { color: var(--sat); } .day.sun .d { color: var(--sun); }
 .day[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
 .day[aria-pressed="true"] .d, .day[aria-pressed="true"] .n { color: var(--accent-ink); }
 
 /* 時間枠 */
 .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 8px; }
-.slot { padding: 12px 8px; border-radius: 10px; border: 1px solid var(--accent); background: var(--panel); color: var(--accent);
+.slot { padding: 12px 8px; border-radius: 999px; border: 1.5px solid var(--accent-line); background: var(--panel); color: var(--accent);
   font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
 .slot:hover { background: var(--accent-soft); }
+.day, .slot, .btn, .chips label { transition: background-color .2s, border-color .2s, color .2s; }
+@media (prefers-reduced-motion: reduce) { .day, .slot, .btn, .chips label { transition: none; } }
 .slot[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
 /* フォーム */
-.selected { background: var(--accent-soft); border-radius: 10px; padding: 12px; margin-bottom: 16px; font-weight: 700; }
+.selected { background: var(--accent-soft); border-radius: 14px; padding: 12px; margin-bottom: 16px; font-weight: 700; }
 .selected button { margin-left: 8px; }
 label.f { display: block; font-weight: 700; margin: 14px 0 6px; font-size: .95rem; }
 label.f .req { color: var(--warn); font-size: .8rem; margin-left: 4px; }
 input[type=text], input[type=email], input[type=tel], textarea {
-  width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
-input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink); font: inherit; }
+input:focus, textarea:focus, button:focus-visible { outline: 3px solid var(--accent-line); outline-offset: 1px; }
 textarea { min-height: 96px; resize: vertical; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chips label { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-size: .92rem; }
 .chips input { accent-color: var(--accent); }
 .chips label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
-.btn { display: block; width: 100%; margin-top: 20px; padding: 14px; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+.btn { display: block; width: 100%; margin-top: 20px; padding: 15px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
   font: inherit; font-weight: 700; font-size: 1.05rem; cursor: pointer; }
 .btn:disabled { opacity: .5; cursor: default; }
 .link { background: none; border: 0; color: var(--accent); font: inherit; font-size: .9rem; text-decoration: underline; cursor: pointer; padding: 0; }
-.error { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 10px 12px; margin-top: 12px; font-size: .92rem; }
+.error { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 12px; margin-top: 12px; font-size: .92rem; }
 .empty, .loading { text-align: center; color: var(--muted); padding: 24px 0; }
 .done h2 { font-family: var(--font-display); color: var(--accent); margin: 0 0 8px; }
 .done dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 16px 0; }
