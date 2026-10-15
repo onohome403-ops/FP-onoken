@@ -85,6 +85,7 @@ textarea { min-height: 96px; resize: vertical; }
 .done dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 16px 0; }
 .done dt { color: var(--muted); }
 .done dd { margin: 0; font-weight: 700; }
+.done dd a { color: var(--accent); }
 [hidden] { display: none !important; }
 </style>
 </head>
@@ -146,8 +147,9 @@ textarea { min-height: 96px; resize: vertical; }
     <dl>
       <dt>日時</dt><dd id="doneWhen"></dd>
       <dt>相談方法</dt><dd id="doneMethod"></dd>
+      <dt class="zoomRow" hidden>Zoom</dt><dd class="zoomRow" hidden><a id="doneZoom" target="_blank" rel="noopener"></a></dd>
     </dl>
-    <p>ご入力のメールアドレスに確認メールをお送りしました。<br>当日お会いできることを楽しみにしております。</p>
+    <p>ご入力のメールアドレスに、Zoomの参加URLを記載した確認メールをお送りしました。<br>当日お会いできることを楽しみにしております。</p>
     <p class="muted">メールが届かない場合は、迷惑メールフォルダもご確認ください。</p>
   </section>
 </div>
@@ -245,6 +247,11 @@ $('form').addEventListener('submit', e => {
     .withSuccessHandler(res => {
       $('doneWhen').textContent = res.when;
       $('doneMethod').textContent = res.method;
+      if (res.zoomUrl) {
+        $('doneZoom').href = res.zoomUrl;
+        $('doneZoom').textContent = '参加URLを開く';
+        document.querySelectorAll('.zoomRow').forEach(el => { el.hidden = false; });
+      }
       $('form').hidden = true;
       $('done').hidden = false;
       window.scrollTo({ top: 0, behavior: 'smooth' });

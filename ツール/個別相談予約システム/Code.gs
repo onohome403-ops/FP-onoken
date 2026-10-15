@@ -3,7 +3,7 @@
  *
  * - 公開URLを開くと、空いている枠だけが表示される
  * - Googleカレンダーに予定がある時間帯は自動的に予約不可
- * - 予約が入るとカレンダーに予定を作成し、お客様と自分に確認メールを送る
+ * - 予約が入るとZoom会議を自動発行し、カレンダーに予定を作成、お客様と自分に確認メールを送る
  *
  * 設定はこの CONFIG だけを書き換えればOK。
  */
@@ -55,6 +55,12 @@ const CONFIG = {
   TOPICS: ['ライフプラン全般', '保険の見直し', '介護・認知症への備え', '老後資金・資産形成', '教育資金', 'その他'],
 
   TIME_ZONE: 'Asia/Tokyo',
+
+  // Zoom会議URLを予約時に自動発行するか
+  // 認証情報はコードに書かず「プロジェクトの設定 → スクリプト プロパティ」に登録する
+  //   ZOOM_ACCOUNT_ID / ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET（必須）
+  //   ZOOM_USER_ID（任意。未設定なら 'me'。うまくいかない時は自分のZoomのメールアドレス）
+  ZOOM_ENABLED: true,
 };
 
 /* ===================== Web画面 ===================== */
@@ -110,16 +116,35 @@ function bookSlot(form) {
       throw new Error('申し訳ありません。この枠は直前に埋まりました。別の枠をお選びください。');
     }
 
-    const cal = getCalendar_(CONFIG.BOOKING_CALENDAR_ID);
     const title = `${CONFIG.EVENT_TITLE_PREFIX}${data.name}様（${data.method}）`;
-    const event = cal.createEvent(title, slot.start, slot.end, {
-      description: buildEventDescription_(data),
-    });
-    event.setTag('booking', 'web');
-
     const when = formatSlotLabel_(slot);
-    sendMails_(data, when);
-    return { when: when, name: data.name, method: data.method };
+
+    // Zoomの発行に失敗しても予約自体は受け付け、URLは後から手動で送る
+    let zoom = null;
+    let zoomError = '';
+    if (CONFIG.ZOOM_ENABLED && data.method.indexOf('オンライン') !== -1) {
+      try {
+        zoom = createZoomMeeting_(title, slot.start, CONFIG.SLOT_MINUTES);
+      } catch (e) {
+        zoomError = String(e && e.message || e);
+        console.error('Zoom発行エラー: ' + zoomError);
+      }
+    }
+
+    try {
+      const event = getCalendar_(CONFIG.BOOKING_CALENDAR_ID).createEvent(title, slot.start, slot.end, {
+        description: (zoom ? buildZoomText_(zoom) + '\n\n' : '') + buildEventDescription_(data),
+        location: zoom ? zoom.joinUrl : '',
+      });
+      event.setTag('booking', 'web');
+      if (zoom) event.setTag('zoomMeetingId', String(zoom.id));
+    } catch (e) {
+      if (zoom) deleteZoomMeeting_(zoom.id); // 予定を作れなかったら発行したZoomも取り消す
+      throw e;
+    }
+
+    sendMails_(data, when, zoom, zoomError);
+    return { when: when, name: data.name, method: data.method, zoomUrl: zoom ? zoom.joinUrl : '' };
   } finally {
     lock.releaseLock();
   }
@@ -228,7 +253,7 @@ function buildEventDescription_(d) {
 
 /* ===================== メール ===================== */
 
-function sendMails_(d, when) {
+function sendMails_(d, when, zoom, zoomError) {
   const ownerEmail = CONFIG.OWNER_NOTIFY_EMAIL || Session.getEffectiveUser().getEmail();
 
   MailApp.sendEmail({
@@ -246,9 +271,11 @@ function sendMails_(d, when) {
       `相談方法：${d.method}`,
       `ご相談内容：${d.topics.join('、') || '未選択'}`,
       '',
-      d.method.indexOf('オンライン') !== -1
-        ? '接続用URLは前日までに改めてご連絡いたします。'
-        : '詳細は前日までに改めてご連絡いたします。',
+      zoom
+        ? `当日は以下のZoomからご参加ください。\n\n${buildZoomText_(zoom)}\n\n開始5分前からご入室いただけます。Zoomアプリを事前に入れておくとスムーズです。`
+        : d.method.indexOf('オンライン') !== -1
+          ? '接続用URLは前日までに改めてご連絡いたします。'
+          : '詳細は前日までに改めてご連絡いたします。',
       '日程の変更・キャンセルは、このメールにご返信ください。',
       '',
       '当日お会いできることを楽しみにしております。',
@@ -260,8 +287,97 @@ function sendMails_(d, when) {
   MailApp.sendEmail({
     to: ownerEmail,
     subject: `【新規予約】${when} ${d.name}様（${d.method}）`,
-    body: `Web予約フォームから新しい予約が入りました。\n\n日時：${when}\n${buildEventDescription_(d)}`,
+    body: [
+      'Web予約フォームから新しい予約が入りました。',
+      ...(zoomError ? ['', '※Zoomの自動発行に失敗しました。お客様にURLを手動でお送りください。', `（${zoomError}）`] : []),
+      '',
+      `日時：${when}`,
+      ...(zoom ? [`Zoom：${zoom.joinUrl}`] : []),
+      buildEventDescription_(d),
+    ].join('\n'),
   });
+}
+
+/* ===================== Zoom ===================== */
+
+/** Server-to-Server OAuth のアクセストークン（約1時間有効なので50分キャッシュ） */
+function getZoomToken_() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('zoomToken');
+  if (cached) return cached;
+
+  const p = PropertiesService.getScriptProperties();
+  const accountId = p.getProperty('ZOOM_ACCOUNT_ID');
+  const clientId = p.getProperty('ZOOM_CLIENT_ID');
+  const secret = p.getProperty('ZOOM_CLIENT_SECRET');
+  if (!accountId || !clientId || !secret) {
+    throw new Error('スクリプト プロパティに ZOOM_ACCOUNT_ID / ZOOM_CLIENT_ID / ZOOM_CLIENT_SECRET が未登録です');
+  }
+  const res = UrlFetchApp.fetch(
+    'https://zoom.us/oauth/token?grant_type=account_credentials&account_id=' + encodeURIComponent(accountId), {
+      method: 'post',
+      headers: { Authorization: 'Basic ' + Utilities.base64Encode(clientId + ':' + secret) },
+      muteHttpExceptions: true,
+    });
+  if (res.getResponseCode() !== 200) {
+    throw new Error(`Zoom認証エラー(${res.getResponseCode()}): ${res.getContentText().slice(0, 200)}`);
+  }
+  const token = JSON.parse(res.getContentText()).access_token;
+  cache.put('zoomToken', token, 50 * 60);
+  return token;
+}
+
+function zoomUserId_() {
+  return PropertiesService.getScriptProperties().getProperty('ZOOM_USER_ID') || 'me';
+}
+
+function createZoomMeeting_(topic, start, minutes) {
+  const res = UrlFetchApp.fetch(`https://api.zoom.us/v2/users/${encodeURIComponent(zoomUserId_())}/meetings`, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: 'Bearer ' + getZoomToken_() },
+    payload: JSON.stringify({
+      topic: topic,
+      type: 2, // 日時指定のミーティング
+      start_time: Utilities.formatDate(start, 'UTC', "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+      duration: minutes,
+      timezone: CONFIG.TIME_ZONE,
+      settings: {
+        waiting_room: true,     // 自分が許可してから入室
+        join_before_host: false,
+        mute_upon_entry: false,
+        host_video: true,
+        participant_video: true,
+      },
+    }),
+    muteHttpExceptions: true,
+  });
+  if (res.getResponseCode() !== 201) {
+    throw new Error(`Zoom会議の作成に失敗(${res.getResponseCode()}): ${res.getContentText().slice(0, 200)}`);
+  }
+  const m = JSON.parse(res.getContentText());
+  return { id: m.id, joinUrl: m.join_url, password: m.password || '' };
+}
+
+function deleteZoomMeeting_(id) {
+  try {
+    UrlFetchApp.fetch(`https://api.zoom.us/v2/meetings/${id}`, {
+      method: 'delete',
+      headers: { Authorization: 'Bearer ' + getZoomToken_() },
+      muteHttpExceptions: true,
+    });
+  } catch (e) {
+    console.error('Zoom会議の削除に失敗: ' + e);
+  }
+}
+
+function buildZoomText_(z) {
+  const id = String(z.id).replace(/^(\d{3})(\d{4})(\d+)$/, '$1 $2 $3');
+  return [
+    `Zoom参加URL：${z.joinUrl}`,
+    `ミーティングID：${id}`,
+    z.password ? `パスコード：${z.password}` : '',
+  ].filter(Boolean).join('\n');
 }
 
 /* ===================== 入力チェック ===================== */
@@ -325,4 +441,13 @@ function formatSlotLabel_(slot) {
 /** 初回に一度実行して権限を許可し、ログで空き枠を確認する */
 function testListSlots() {
   getAvailableSlots().forEach(d => Logger.log(`${d.label}: ${d.slots.map(s => s.label).join(' / ')}`));
+}
+
+/** Zoom連携の確認：テスト会議を作成してURLをログに出し、すぐ削除する */
+function testZoom() {
+  const start = new Date(Date.now() + 7 * 24 * 3600 * 1000);
+  const z = createZoomMeeting_('【テスト】予約システム接続確認', start, CONFIG.SLOT_MINUTES);
+  Logger.log('Zoom連携OK\n' + buildZoomText_(z));
+  deleteZoomMeeting_(z.id);
+  Logger.log('テスト会議は削除しました');
 }
