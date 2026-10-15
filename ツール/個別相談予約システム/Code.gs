@@ -15,13 +15,17 @@ const CONFIG = {
   CHECK_CALENDAR_IDS: ['primary'],
 
   // 枠の開始時刻（毎日）と1枠の長さ（分）
-  SLOT_START_TIMES: ['10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'],
-  SLOT_MINUTES: 90,
-
-  // 曜日ごとに出さない枠（0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土）
-  EXCLUDED_SLOTS_BY_WEEKDAY: {
-    2: ['10:30'], // 火曜日は10:30枠なし
+  // 曜日ごとの枠の開始時刻（0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土）。空配列 [] でその曜日は受付なし
+  SLOT_START_TIMES_BY_WEEKDAY: {
+    0: ['9:00', '10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'], // 日
+    1: ['10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'],         // 月
+    2: ['10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'],         // 火
+    3: ['10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'],         // 水
+    4: ['10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'],         // 木
+    5: ['9:00', '10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'], // 金
+    6: ['9:00', '10:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30'], // 土
   },
+  SLOT_MINUTES: 90,
 
   // 終日受付しない日：第n◯曜日（例：第1・第3月曜日）
   CLOSED_NTH_WEEKDAYS: [
@@ -162,10 +166,8 @@ function buildCandidateSlots_(now, cfg) {
     const ymd = addDaysYmd_(todayYmd, i);
     if (isClosedDay_(ymd, cfg)) continue;
     const weekday = weekdayOf_(ymd);
-    const excluded = cfg.EXCLUDED_SLOTS_BY_WEEKDAY[weekday] || [];
-
-    cfg.SLOT_START_TIMES.forEach(hm => {
-      if (excluded.indexOf(hm) !== -1) return;
+    (cfg.SLOT_START_TIMES_BY_WEEKDAY[weekday] || []).forEach(raw => {
+      const hm = raw.padStart(5, '0'); // '9:00' → '09:00'
       const start = jstDate_(ymd, hm);
       if (start.getTime() < earliest) return;
       const end = new Date(start.getTime() + cfg.SLOT_MINUTES * 60 * 1000);
