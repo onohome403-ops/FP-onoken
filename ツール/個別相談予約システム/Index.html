@@ -64,14 +64,18 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.5rem; colo
 .mc-day { min-height: 52px; border-radius: 14px; border: 0; background: transparent; color: var(--muted); font: inherit;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 4px 0; opacity: .45; }
 .mc-day .d { font-size: 1rem; font-variant-numeric: tabular-nums; line-height: 1.2; }
-.mc-day .n { font-size: .68rem; line-height: 1.2; }
+.mc-day .n { font-size: .95rem; line-height: 1.2; font-weight: 700; }
+.mc-day.full { opacity: .5; background: var(--line); cursor: not-allowed; }
+.mc-day.full .n { color: var(--muted); }
 button.mc-day { opacity: 1; background: var(--accent-soft); color: var(--ink); font-weight: 700; cursor: pointer; }
-button.mc-day .n { color: var(--accent); font-weight: 500; }
+button.mc-day .n { color: var(--accent); }
+button.mc-day.few .n { color: var(--warn); }
 button.mc-day.sun .d { color: var(--sun); } button.mc-day.sat .d { color: var(--sat); }
 button.mc-day:hover { background: var(--accent-line); }
 button.mc-day[aria-pressed="true"], button.mc-day[aria-pressed="true"] .d, button.mc-day[aria-pressed="true"] .n { background: var(--accent); color: var(--accent-ink); }
 .mc-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 10px 0 0; font-size: .8rem; color: var(--muted); }
-.mc-legend i { display: inline-block; width: .9em; height: .9em; border-radius: 4px; background: var(--accent-soft); vertical-align: -1px; margin-right: 4px; }
+.mc-legend .lg { margin-right: 4px; }
+.mc-legend .ok { color: var(--accent); } .mc-legend .few { color: var(--warn); } .mc-legend .ng { color: var(--muted); }
 #slotDate { color: var(--accent); }
 
 /* 時間枠 */
@@ -126,7 +130,7 @@ textarea { min-height: 96px; resize: vertical; }
           <button type="button" class="mc-nav" id="nextMonth" aria-label="次の月">›</button>
         </div>
         <div class="mc-grid" id="calGrid" role="group" aria-label="日付"></div>
-        <p class="mc-legend"><span><i></i>ご予約いただける日（数字は空き枠数）</span></p>
+        <p class="mc-legend"><span><b class="lg ok">◯</b>空きあり</span><span><b class="lg few">△</b>残りわずか</span><span><b class="lg ng">×</b>ご予約いただけません</span></p>
       </div>
       <div id="loading" class="loading">空き状況を確認しています…</div>
       <div id="empty" class="empty" hidden>現在ご予約いただける枠がありません。<br>お手数ですが、直接ご連絡ください。</div>
@@ -231,6 +235,10 @@ function renderCalendar() {
   const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate();
   const indexByDate = {};
   days.forEach((d, i) => { indexByDate[d.date] = i; });
+  // 受付期間（今日〜MAX_DAYS_AHEAD日後）の中で空きがない日は × にする
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: CONFIG.timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  const t = today.split('-').map(Number);
+  const rangeEnd = new Date(Date.UTC(t[0], t[1] - 1, t[2] + CONFIG.maxDaysAhead)).toISOString().slice(0, 10);
 
   const cells = ['日', '月', '火', '水', '木', '金', '土'].map((w, k) =>
     `<span class="mc-wd${k === 0 ? ' sun' : k === 6 ? ' sat' : ''}">${w}</span>`);
@@ -240,10 +248,15 @@ function renderCalendar() {
     const wd = (firstWd + day - 1) % 7;
     const cls = wd === 0 ? ' sun' : wd === 6 ? ' sat' : '';
     const i = indexByDate[ymd];
-    cells.push(i === undefined
-      ? `<span class="mc-day${cls}"><span class="d">${day}</span></span>`
-      : `<button type="button" class="mc-day${cls}" data-i="${i}" aria-pressed="${i === pickedIndex}" aria-label="${esc(days[i].label)} 空き${days[i].slots.length}枠">
-          <span class="d">${day}</span><span class="n">${days[i].slots.length}枠</span></button>`);
+    if (i !== undefined) {
+      const few = days[i].slots.length <= CONFIG.fewSlots;
+      cells.push(`<button type="button" class="mc-day${cls}${few ? ' few' : ''}" data-i="${i}" aria-pressed="${i === pickedIndex}" aria-label="${esc(days[i].label)} ${few ? '残りわずか' : '空きあり'}">
+          <span class="d">${day}</span><span class="n" aria-hidden="true">${few ? '△' : '◯'}</span></button>`);
+    } else if (ymd >= today && ymd <= rangeEnd) {
+      cells.push(`<span class="mc-day full${cls}" aria-label="${day}日 ご予約いただけません"><span class="d">${day}</span><span class="n" aria-hidden="true">×</span></span>`);
+    } else {
+      cells.push(`<span class="mc-day${cls}"><span class="d">${day}</span></span>`);
+    }
   }
   $('calGrid').innerHTML = cells.join('');
   $('calGrid').querySelectorAll('button.mc-day').forEach(b => b.addEventListener('click', () => pickDay(Number(b.dataset.i))));

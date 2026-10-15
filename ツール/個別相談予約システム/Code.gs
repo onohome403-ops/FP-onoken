@@ -42,6 +42,9 @@ const CONFIG = {
   MIN_HOURS_BEFORE: 24,
   MAX_DAYS_AHEAD: 30,
 
+  // カレンダーの表示：空き枠がこの数以下なら △（残りわずか）、それより多ければ ◯、0なら ×
+  FEW_SLOTS_THRESHOLD: 2,
+
   // 予定の前後に空けておきたい時間（分）。移動がある場合などに使用
   BUFFER_MINUTES: 0,
 
@@ -83,6 +86,9 @@ function doGet() {
     title: CONFIG.TITLE,
     ownerName: CONFIG.OWNER_NAME,
     slotMinutes: CONFIG.SLOT_MINUTES,
+    maxDaysAhead: CONFIG.MAX_DAYS_AHEAD,
+    fewSlots: CONFIG.FEW_SLOTS_THRESHOLD,
+    timeZone: CONFIG.TIME_ZONE,
     methods: CONFIG.METHODS,
     topics: CONFIG.TOPICS,
   };
