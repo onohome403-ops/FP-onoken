@@ -91,7 +91,7 @@ textarea { min-height: 96px; resize: vertical; }
 <body>
 <div class="wrap">
   <h1 id="title"></h1>
-  <p class="lead">ご都合のよい日時をお選びください。表示されている枠はすべてご予約いただけます。</p>
+  <p class="lead">ご相談はオンライン（ビデオ通話）で行います。ご自宅から、スマホでもご参加いただけます。<br>ご都合のよい日時をお選びください。</p>
 
   <!-- ①② 日時を選ぶ -->
   <section id="pick">
@@ -125,8 +125,10 @@ textarea { min-height: 96px; resize: vertical; }
     <label class="f" for="phone">電話番号<span class="req">必須</span></label>
     <input type="tel" id="phone" autocomplete="tel" inputmode="tel" required>
 
-    <span class="f" style="display:block;font-weight:700;margin:14px 0 6px">相談方法<span class="req" style="color:var(--warn);font-size:.8rem;margin-left:4px">必須</span></span>
-    <div class="chips" id="methods"></div>
+    <div id="methodField">
+      <span class="f" style="display:block;font-weight:700;margin:14px 0 6px">相談方法<span class="req" style="color:var(--warn);font-size:.8rem;margin-left:4px">必須</span></span>
+      <div class="chips" id="methods"></div>
+    </div>
 
     <span class="f" style="display:block;font-weight:700;margin:14px 0 6px">ご相談になりたいこと（複数可）</span>
     <div class="chips" id="topics"></div>
@@ -161,6 +163,8 @@ $('slotMinutes').textContent = `（1枠${CONFIG.slotMinutes}分）`;
 
 CONFIG.methods.forEach((m, i) => $('methods').insertAdjacentHTML('beforeend',
   `<label><input type="radio" name="method" value="${esc(m)}"${i === 0 ? ' checked' : ''}>${esc(m)}</label>`));
+// 方法が1つだけ（オンラインのみ）なら選択欄は出さない
+$('methodField').hidden = CONFIG.methods.length < 2;
 CONFIG.topics.forEach(t => $('topics').insertAdjacentHTML('beforeend',
   `<label><input type="checkbox" name="topic" value="${esc(t)}">${esc(t)}</label>`));
 

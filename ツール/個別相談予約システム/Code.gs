@@ -45,11 +45,13 @@ const CONFIG = {
   IGNORE_ALL_DAY_KEYWORDS: ['誕生日', '祝日'],
 
   // 表示・メール用
-  TITLE: '個別相談のご予約',
+  TITLE: 'オンライン個別相談のご予約',
   OWNER_NAME: '担当FP',
   OWNER_NOTIFY_EMAIL: '', // 空なら、このスクリプトのオーナー（自分）に通知
   EVENT_TITLE_PREFIX: '【個別相談】',
-  METHODS: ['対面', 'オンライン（Zoom等）', '電話'],
+  // Web予約はオンラインのみ。対面の予定は自分でカレンダーに直接入れる運用
+  // （複数並べると、お客様が予約画面で選べるようになる）
+  METHODS: ['オンライン'],
   TOPICS: ['ライフプラン全般', '保険の見直し', '介護・認知症への備え', '老後資金・資産形成', '教育資金', 'その他'],
 
   TIME_ZONE: 'Asia/Tokyo',
