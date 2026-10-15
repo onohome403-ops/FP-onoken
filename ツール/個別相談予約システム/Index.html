@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Old+Mincho:wght@600;700&display=swap">
+<style>
+/* Layout: 1カラム。①日付を選ぶ → ②時間を選ぶ → ③お客様情報 → 完了。スマホ（LINEから開く）前提 */
+:root {
+  --bg: #F3F5F4;
+  --panel: #FFFFFF;
+  --ink: #17262E;
+  --muted: #55646C;
+  --line: #D5DCDA;
+  --accent: #1F6F6A;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E1EFEC;
+  --warn: #A4541B;
+  --warn-soft: #F7EADF;
+  --font-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-body: "BIZ UDPGothic", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11191D; --panel: #18242A; --ink: #E6EEEC; --muted: #9DB0B4; --line: #2C3D44;
+    --accent: #6FC2B9; --accent-ink: #0E1A1C; --accent-soft: #1D3634; --warn: #F0A56B; --warn-soft: #3A2A1E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11191D; --panel: #18242A; --ink: #E6EEEC; --muted: #9DB0B4; --line: #2C3D44;
+  --accent: #6FC2B9; --accent-ink: #0E1A1C; --accent-soft: #1D3634; --warn: #F0A56B; --warn-soft: #3A2A1E;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-family: var(--font-display); font-size: 1.6rem; margin: 0 0 4px; letter-spacing: .02em; }
+.lead { color: var(--muted); margin: 0 0 24px; font-size: .95rem; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 20px 16px; margin-bottom: 16px; }
+.step { display: flex; align-items: baseline; gap: 8px; margin: 0 0 12px; font-weight: 700; }
+.step b { font-family: var(--font-display); color: var(--accent); font-size: 1.1rem; }
+.muted { color: var(--muted); font-size: .9rem; }
+
+/* 日付：横スクロールのチップ */
+.days { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x proximity; }
+.day { flex: 0 0 auto; min-width: 68px; scroll-snap-align: start; text-align: center; padding: 8px 6px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; cursor: pointer; }
+.day .d { display: block; font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.day .n { display: block; font-size: .75rem; color: var(--muted); }
+.day.sat .d { color: #3A6EA5; } .day.sun .d { color: #B5473A; }
+.day[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+.day[aria-pressed="true"] .d, .day[aria-pressed="true"] .n { color: var(--accent-ink); }
+
+/* 時間枠 */
+.slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 8px; }
+.slot { padding: 12px 8px; border-radius: 10px; border: 1px solid var(--accent); background: var(--panel); color: var(--accent);
+  font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; cursor: pointer; }
+.slot:hover { background: var(--accent-soft); }
+.slot[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+/* フォーム */
+.selected { background: var(--accent-soft); border-radius: 10px; padding: 12px; margin-bottom: 16px; font-weight: 700; }
+.selected button { margin-left: 8px; }
+label.f { display: block; font-weight: 700; margin: 14px 0 6px; font-size: .95rem; }
+label.f .req { color: var(--warn); font-size: .8rem; margin-left: 4px; }
+input[type=text], input[type=email], input[type=tel], textarea {
+  width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; }
+input:focus, textarea:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+textarea { min-height: 96px; resize: vertical; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips label { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-size: .92rem; }
+.chips input { accent-color: var(--accent); }
+.chips label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.btn { display: block; width: 100%; margin-top: 20px; padding: 14px; border: 0; border-radius: 10px; background: var(--accent); color: var(--accent-ink);
+  font: inherit; font-weight: 700; font-size: 1.05rem; cursor: pointer; }
+.btn:disabled { opacity: .5; cursor: default; }
+.link { background: none; border: 0; color: var(--accent); font: inherit; font-size: .9rem; text-decoration: underline; cursor: pointer; padding: 0; }
+.error { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 10px 12px; margin-top: 12px; font-size: .92rem; }
+.empty, .loading { text-align: center; color: var(--muted); padding: 24px 0; }
+.done h2 { font-family: var(--font-display); color: var(--accent); margin: 0 0 8px; }
+.done dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; margin: 16px 0; }
+.done dt { color: var(--muted); }
+.done dd { margin: 0; font-weight: 700; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="title"></h1>
+  <p class="lead">ご都合のよい日時をお選びください。表示されている枠はすべてご予約いただけます。</p>
+
+  <!-- ①② 日時を選ぶ -->
+  <section id="pick">
+    <div class="panel">
+      <p class="step"><b>1</b>日付を選ぶ</p>
+      <div id="days" class="days" role="group" aria-label="日付"></div>
+      <div id="loading" class="loading">空き状況を確認しています…</div>
+      <div id="empty" class="empty" hidden>現在ご予約いただける枠がありません。<br>お手数ですが、直接ご連絡ください。</div>
+    </div>
+    <div class="panel" id="slotPanel" hidden>
+      <p class="step"><b>2</b>時間を選ぶ<span class="muted" id="slotMinutes"></span></p>
+      <div id="slots" class="slots" role="group" aria-label="時間"></div>
+    </div>
+  </section>
+
+  <!-- ③ お客様情報 -->
+  <form id="form" class="panel" hidden novalidate>
+    <p class="step"><b>3</b>お客様情報</p>
+    <div class="selected"><span id="selectedLabel"></span> <button type="button" class="link" id="change">変更する</button></div>
+
+    <label class="f" for="name">お名前<span class="req">必須</span></label>
+    <input type="text" id="name" autocomplete="name" required>
+
+    <label class="f" for="kana">ふりがな</label>
+    <input type="text" id="kana">
+
+    <label class="f" for="email">メールアドレス<span class="req">必須</span></label>
+    <input type="email" id="email" autocomplete="email" inputmode="email" required>
+    <p class="muted" style="margin:4px 0 0">ご予約確定のメールをお送りします。</p>
+
+    <label class="f" for="phone">電話番号<span class="req">必須</span></label>
+    <input type="tel" id="phone" autocomplete="tel" inputmode="tel" required>
+
+    <span class="f" style="display:block;font-weight:700;margin:14px 0 6px">相談方法<span class="req" style="color:var(--warn);font-size:.8rem;margin-left:4px">必須</span></span>
+    <div class="chips" id="methods"></div>
+
+    <span class="f" style="display:block;font-weight:700;margin:14px 0 6px">ご相談になりたいこと（複数可）</span>
+    <div class="chips" id="topics"></div>
+
+    <label class="f" for="note">ご質問・ご要望など</label>
+    <textarea id="note" placeholder="例）親の介護が始まりそうで、お金の準備について相談したい"></textarea>
+
+    <div id="error" class="error" role="alert" hidden></div>
+    <button type="submit" class="btn" id="submit">この内容で予約する</button>
+  </form>
+
+  <!-- 完了 -->
+  <section id="done" class="panel done" hidden>
+    <h2>ご予約が確定しました</h2>
+    <dl>
+      <dt>日時</dt><dd id="doneWhen"></dd>
+      <dt>相談方法</dt><dd id="doneMethod"></dd>
+    </dl>
+    <p>ご入力のメールアドレスに確認メールをお送りしました。<br>当日お会いできることを楽しみにしております。</p>
+    <p class="muted">メールが届かない場合は、迷惑メールフォルダもご確認ください。</p>
+  </section>
+</div>
+
+<script>
+const CONFIG = <?!= JSON.stringify(config) ?>;
+const $ = id => document.getElementById(id);
+let days = [];
+let selected = null; // { start, label, dayLabel }
+
+$('title').textContent = CONFIG.title;
+$('slotMinutes').textContent = `（1枠${CONFIG.slotMinutes}分）`;
+
+CONFIG.methods.forEach((m, i) => $('methods').insertAdjacentHTML('beforeend',
+  `<label><input type="radio" name="method" value="${esc(m)}"${i === 0 ? ' checked' : ''}>${esc(m)}</label>`));
+CONFIG.topics.forEach(t => $('topics').insertAdjacentHTML('beforeend',
+  `<label><input type="checkbox" name="topic" value="${esc(t)}">${esc(t)}</label>`));
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function loadSlots() {
+  $('loading').hidden = false;
+  $('empty').hidden = true;
+  $('days').innerHTML = '';
+  $('slotPanel').hidden = true;
+  google.script.run
+    .withSuccessHandler(res => { days = res; renderDays(); })
+    .withFailureHandler(() => { $('loading').textContent = '読み込みに失敗しました。ページを再読み込みしてください。'; })
+    .getAvailableSlots();
+}
+
+function renderDays() {
+  $('loading').hidden = true;
+  if (!days.length) { $('empty').hidden = false; return; }
+  $('days').innerHTML = days.map((d, i) => {
+    const w = d.label.slice(-2, -1);
+    const cls = w === '土' ? ' sat' : w === '日' ? ' sun' : '';
+    return `<button type="button" class="day${cls}" data-i="${i}" aria-pressed="false">
+      <span class="d">${esc(d.label)}</span><span class="n">残り${d.slots.length}枠</span></button>`;
+  }).join('');
+  $('days').querySelectorAll('.day').forEach(b => b.addEventListener('click', () => pickDay(Number(b.dataset.i))));
+  pickDay(0);
+}
+
+function pickDay(i) {
+  $('days').querySelectorAll('.day').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.i) === i)));
+  const d = days[i];
+  $('slots').innerHTML = d.slots.map((s, j) =>
+    `<button type="button" class="slot" data-j="${j}" aria-pressed="false">${esc(s.label)}</button>`).join('');
+  $('slots').querySelectorAll('.slot').forEach(b => b.addEventListener('click', () => {
+    const s = d.slots[Number(b.dataset.j)];
+    selected = { start: s.start, label: `${d.label} ${s.label}` };
+    showForm();
+  }));
+  $('slotPanel').hidden = false;
+}
+
+function showForm() {
+  $('selectedLabel').textContent = selected.label;
+  $('pick').hidden = true;
+  $('form').hidden = false;
+  $('error').hidden = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  $('name').focus({ preventScroll: true });
+}
+
+$('change').addEventListener('click', () => {
+  $('form').hidden = true;
+  $('pick').hidden = false;
+});
+
+$('form').addEventListener('submit', e => {
+  e.preventDefault();
+  const form = {
+    start: selected.start,
+    name: $('name').value,
+    kana: $('kana').value,
+    email: $('email').value,
+    phone: $('phone').value,
+    method: (document.querySelector('input[name=method]:checked') || {}).value,
+    topics: [...document.querySelectorAll('input[name=topic]:checked')].map(x => x.value),
+    note: $('note').value,
+  };
+  const missing = !form.name.trim() ? 'お名前' : !form.email.trim() ? 'メールアドレス' : !form.phone.trim() ? '電話番号' : '';
+  if (missing) return showError(`${missing}を入力してください。`);
+
+  $('submit').disabled = true;
+  $('submit').textContent = '送信中…';
+  $('error').hidden = true;
+  google.script.run
+    .withSuccessHandler(res => {
+      $('doneWhen').textContent = res.when;
+      $('doneMethod').textContent = res.method;
+      $('form').hidden = true;
+      $('done').hidden = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    })
+    .withFailureHandler(err => {
+      $('submit').disabled = false;
+      $('submit').textContent = 'この内容で予約する';
+      const msg = String((err && err.message) || '送信に失敗しました。').replace(/^(Exception|Error):\s*/, '');
+      showError(msg);
+      // 枠が埋まっていた場合は空き状況を取り直して選び直してもらう
+      if (/埋まりました|受付対象外/.test(msg)) {
+        setTimeout(() => { $('form').hidden = true; $('pick').hidden = false; loadSlots(); }, 2500);
+      }
+    })
+    .bookSlot(form);
+});
+
+function showError(msg) {
+  $('error').textContent = msg;
+  $('error').hidden = false;
+}
+
+loadSlots();
+</script>
+</body>
+</html>
