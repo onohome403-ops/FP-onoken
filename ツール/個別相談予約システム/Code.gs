@@ -48,11 +48,8 @@ const CONFIG = {
   // 予定の前後に空けておきたい時間（分）。移動がある場合などに使用
   BUFFER_MINUTES: 0,
 
-  // 終日の予定（「休み」など）がある日も予約不可にするか
-  ALL_DAY_EVENTS_BLOCK: true,
-
-  // 終日予定でもタイトルにこれらを含むものは無視する（誕生日・祝日など）
-  IGNORE_ALL_DAY_KEYWORDS: ['誕生日', '祝日'],
+  // 終日予定は基本的にメモ扱い（予約を止めない）。タイトルにこれらを含む終日予定がある日だけ、丸ごと予約不可にする
+  ALL_DAY_BLOCK_KEYWORDS: ['休み', '休業', '予約不可'],
 
   // 表示・メール用
   TITLE: 'オンライン個別相談のご予約',
@@ -251,9 +248,8 @@ function getBusyIntervals_(start, end) {
       } catch (e) { /* 共有カレンダー等で取得できない場合は予定ありとして扱う */ }
 
       if (ev.isAllDayEvent()) {
-        if (!CONFIG.ALL_DAY_EVENTS_BLOCK) return;
         const title = ev.getTitle() || '';
-        if (CONFIG.IGNORE_ALL_DAY_KEYWORDS.some(k => title.indexOf(k) !== -1)) return;
+        if (!CONFIG.ALL_DAY_BLOCK_KEYWORDS.some(k => title.indexOf(k) !== -1)) return;
       }
       busy.push({ start: ev.getStartTime(), end: ev.getEndTime() });
     });
