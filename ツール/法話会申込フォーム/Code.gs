@@ -26,7 +26,7 @@ const CONFIG = {
   DEADLINE: '2027-01-25T23:59:59+09:00',
   DEADLINE_TEXT: '2027年1月25日（月）',
 
-  // 主催者（フォーム・確認メールに表示）
+  // 主催者（フォームと送信後の画面に表示）
   ORGANIZER_NAME: '小野 健汰',
   ORGANIZER_TEL: '080-1659-3872',
   ORGANIZER_HOURS: '受付 9:00〜17:00',
