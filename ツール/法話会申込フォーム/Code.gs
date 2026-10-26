@@ -4,7 +4,7 @@
  * - setup を1回実行すると、Googleフォームと回答用スプレッドシートを自動で作成
  * - 申込が入るたびに合計人数を数え、残席に合わせて「参加人数」の選択肢を自動で絞り、定員に達したら受付終了
  * - 申込締切の日時になったら自動で受付終了
- * - 申込者（メールアドレスの入力があれば）に受付確認メール、自分に通知メールを送信
+ * - 入力項目は お名前・電話番号・参加人数 の3つだけ。申込ごとに自分へ通知メールを送信
  *
  * 設定はこの CONFIG だけを書き換えればOK。
  */
@@ -31,25 +31,13 @@ const CONFIG = {
   ORGANIZER_TEL: '080-1659-3872',
   ORGANIZER_HOURS: '受付 9:00〜17:00',
   OWNER_NOTIFY_EMAIL: '', // 空なら、このスクリプトのオーナー（自分）に通知
-
-  AREA_CHOICES: ['松島町', '塩竈市・七ヶ浜町・利府町', '仙台市', '東松島市・大郷町・大和町'],
-  ACCESS_CHOICES: ['車（乗り合わせ）', '車（おひとり・ご家族のみ）', '電車（JR）', 'ご家族・知人の送迎', '徒歩・その他'],
-  SOURCE_CHOICES: ['チラシ・ポスター', '回覧板', '町の広報誌', '知人・家族の紹介', 'SNS'],
 };
 
 // フォームの質問タイトル（回答の読み取りにも使うので、フォーム作成後は変えない）
 const Q = {
   NAME: 'お名前',
-  KANA: 'ふりがな',
   TEL: '電話番号',
-  EMAIL: 'メールアドレス',
   COUNT: '参加人数',
-  COMPANIONS: 'ご一緒に参加される方のお名前',
-  AREA: 'お住まいの地域',
-  ACCESS: '当日の交通手段',
-  SOURCE: 'この会を何でお知りになりましたか',
-  MESSAGE: '講師へのご質問・メッセージ',
-  CONSENT: '個人情報の取扱いについて',
 };
 
 /** 最初に1回だけ実行：フォーム・回答シート・自動処理を作成 */
@@ -62,48 +50,27 @@ function setup() {
   const form = FormApp.create(CONFIG.FORM_TITLE);
   form.setDescription(buildFormDescription_())
     .setConfirmationMessage(
-      'お申込みありがとうございました。受付が完了しました。\n' +
-      'メールアドレスをご入力いただいた方には、受付確認メールをお送りしています。\n' +
-      '当日は受付にてお名前をお伝えください。')
+      'お申込みありがとうございました。受付が完了しました。\n\n' +
+      '■ 日時：' + CONFIG.DATE_TEXT + '\n' +
+      '■ 会場：' + CONFIG.VENUE_TEXT + '\n' +
+      '■ 参加費：' + CONFIG.FEE_TEXT + '\n\n' +
+      '当日は受付にてお名前をお伝えください。' + CONFIG.PARKING_NOTE + '\n' +
+      'ご都合が悪くなった場合は、主催 ' + CONFIG.ORGANIZER_NAME + '（TEL ' + CONFIG.ORGANIZER_TEL + '／' + CONFIG.ORGANIZER_HOURS + '）までご連絡ください。')
     .setAllowResponseEdits(false)
     .setShowLinkToRespondAgain(false)
     .setCollectEmail(false);
 
   form.addTextItem().setTitle(Q.NAME).setRequired(true);
-  form.addTextItem().setTitle(Q.KANA).setRequired(true);
   form.addTextItem().setTitle(Q.TEL)
-    .setHelpText('当日までにご連絡が必要な場合に使用します（例：090-1234-5678）')
+    .setHelpText('当日までにご連絡が必要な場合にのみ使用します')
     .setRequired(true)
     .setValidation(FormApp.createTextValidation()
       .requireTextMatchesPattern('^[0-9０-９\\-－ー ]{10,15}$')
       .setHelpText('数字とハイフンで入力してください')
       .build());
-  form.addTextItem().setTitle(Q.EMAIL)
-    .setHelpText('ご入力いただくと、受付確認メールをお送りします（任意）')
-    .setValidation(FormApp.createTextValidation()
-      .requireTextIsEmail()
-      .setHelpText('メールアドレスの形式で入力してください')
-      .build());
   form.addListItem().setTitle(Q.COUNT)
     .setHelpText('ご本人を含めた人数を選んでください')
     .setChoiceValues(countChoices_(CONFIG.MAX_PER_APPLICATION))
-    .setRequired(true);
-  form.addParagraphTextItem().setTitle(Q.COMPANIONS)
-    .setHelpText('2名以上でお申込みの場合のみご記入ください');
-  form.addMultipleChoiceItem().setTitle(Q.AREA)
-    .setChoiceValues(CONFIG.AREA_CHOICES)
-    .showOtherOption(true);
-  form.addMultipleChoiceItem().setTitle(Q.ACCESS)
-    .setHelpText('駐車場の準備に使用します')
-    .setChoiceValues(CONFIG.ACCESS_CHOICES);
-  form.addCheckboxItem().setTitle(Q.SOURCE)
-    .setChoiceValues(CONFIG.SOURCE_CHOICES)
-    .showOtherOption(true);
-  form.addParagraphTextItem().setTitle(Q.MESSAGE)
-    .setHelpText('当日の参考にさせていただきます（任意）');
-  form.addCheckboxItem().setTitle(Q.CONSENT)
-    .setHelpText('ご記入いただいた個人情報は、本法話会の参加受付とご連絡のためにのみ使用し、それ以外の目的には使用しません。')
-    .setChoiceValues(['同意する'])
     .setRequired(true);
 
   const ss = SpreadsheetApp.create(CONFIG.FORM_TITLE + '（回答）');
@@ -132,7 +99,6 @@ function handleSubmit(e) {
     const answers = toAnswerMap_(e.response);
     const total = countAttendees_(form);
     updateCapacity_(form, total);
-    sendConfirmation_(answers);
     notifyOwner_(answers, total);
   } finally {
     lock.releaseLock();
@@ -205,6 +171,7 @@ function buildFormDescription_() {
     '■ 申込締切：' + CONFIG.DEADLINE_TEXT + '（定員に達し次第締切）',
     '※' + CONFIG.PARKING_NOTE,
     '',
+    'ご記入いただいたお名前・電話番号は、本法話会の受付とご連絡のためにのみ使用します。',
     'お問合せ：主催 ' + CONFIG.ORGANIZER_NAME + '（TEL ' + CONFIG.ORGANIZER_TEL + '／' + CONFIG.ORGANIZER_HOURS + '）',
   ].join('\n');
 }
@@ -246,35 +213,12 @@ function toAnswerMap_(response) {
   return map;
 }
 
-function sendConfirmation_(a) {
-  if (!a[Q.EMAIL]) return;
-  MailApp.sendEmail({
-    to: a[Q.EMAIL],
-    name: CONFIG.ORGANIZER_NAME,
-    subject: '【受付完了】' + CONFIG.EVENT_NAME + '（' + CONFIG.SHORT_DATE_TEXT + '）',
-    body: a[Q.NAME] + ' 様\n\n' +
-      'このたびは「' + CONFIG.EVENT_NAME + '」にお申込みいただき、ありがとうございます。\n' +
-      '以下の内容で受付いたしました。\n\n' +
-      '■ 日時：' + CONFIG.DATE_TEXT + '\n' +
-      '■ 会場：' + CONFIG.VENUE_TEXT + '\n' +
-      '■ 参加費：' + CONFIG.FEE_TEXT + '\n' +
-      '■ お申込み人数：' + a[Q.COUNT] + '\n\n' +
-      '当日は受付にてお名前をお伝えください。\n' +
-      CONFIG.PARKING_NOTE + '\n' +
-      '夜間の開催です。暖かい服装で、お足元に十分ご注意のうえお越しください。\n\n' +
-      'ご都合が悪くなった場合は、お手数ですが下記までご連絡ください。\n\n' +
-      '主催：' + CONFIG.ORGANIZER_NAME + '\n' +
-      'TEL：' + CONFIG.ORGANIZER_TEL + '（' + CONFIG.ORGANIZER_HOURS + '）\n',
-  });
-}
-
 function notifyOwner_(a, total) {
   const over = total > CONFIG.CAPACITY
     ? '\n※定員を ' + (total - CONFIG.CAPACITY) + '名超えています（同時に申込があったため）。調整のご連絡をお願いします。\n'
     : '';
   const lines = Object.keys(Q)
     .map(k => Q[k])
-    .filter(title => title !== Q.CONSENT)
     .map(title => '・' + title + '：' + (a[title] || '（未記入）'));
   MailApp.sendEmail({
     to: ownerEmail_(),
