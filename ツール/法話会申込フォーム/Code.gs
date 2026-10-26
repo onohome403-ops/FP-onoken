@@ -29,10 +29,11 @@ const CONFIG = {
   // 主催者（フォーム・確認メールに表示）
   ORGANIZER_NAME: '小野 健汰',
   ORGANIZER_TEL: '080-1659-3872',
+  ORGANIZER_HOURS: '受付 9:00〜17:00',
   OWNER_NOTIFY_EMAIL: '', // 空なら、このスクリプトのオーナー（自分）に通知
 
   AREA_CHOICES: ['松島町', '塩竈市・七ヶ浜町・利府町', '仙台市', '東松島市・大郷町・大和町'],
-  ACCESS_CHOICES: ['自家用車', '電車（JR）', 'ご家族・知人の送迎', '徒歩・その他'],
+  ACCESS_CHOICES: ['車（乗り合わせ）', '車（おひとり・ご家族のみ）', '電車（JR）', 'ご家族・知人の送迎', '徒歩・その他'],
   SOURCE_CHOICES: ['チラシ・ポスター', '回覧板', '町の広報誌', '知人・家族の紹介', 'SNS'],
 };
 
@@ -204,7 +205,7 @@ function buildFormDescription_() {
     '■ 申込締切：' + CONFIG.DEADLINE_TEXT + '（定員に達し次第締切）',
     '※' + CONFIG.PARKING_NOTE,
     '',
-    'お問合せ：主催 ' + CONFIG.ORGANIZER_NAME + '（TEL ' + CONFIG.ORGANIZER_TEL + '）',
+    'お問合せ：主催 ' + CONFIG.ORGANIZER_NAME + '（TEL ' + CONFIG.ORGANIZER_TEL + '／' + CONFIG.ORGANIZER_HOURS + '）',
   ].join('\n');
 }
 
@@ -263,7 +264,7 @@ function sendConfirmation_(a) {
       '夜間の開催です。暖かい服装で、お足元に十分ご注意のうえお越しください。\n\n' +
       'ご都合が悪くなった場合は、お手数ですが下記までご連絡ください。\n\n' +
       '主催：' + CONFIG.ORGANIZER_NAME + '\n' +
-      'TEL：' + CONFIG.ORGANIZER_TEL + '\n',
+      'TEL：' + CONFIG.ORGANIZER_TEL + '（' + CONFIG.ORGANIZER_HOURS + '）\n',
   });
 }
 
