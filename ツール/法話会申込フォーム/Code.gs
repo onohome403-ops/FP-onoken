@@ -15,6 +15,7 @@ const CONFIG = {
   DATE_TEXT: '2027年1月28日（木）19:00〜20:30（開場 18:30）',
   SHORT_DATE_TEXT: '1月28日・木',
   VENUE_TEXT: 'パレス松洲 大会議室（宮城郡松島町高城字浜38）',
+  PARKING_NOTE: '駐車場に限りがあります。できるだけ乗り合わせでお越しください。',
   FEE_TEXT: '1,000円（当日受付にてお支払いください。おつりのいらないようご用意いただけますと幸いです）',
 
   // 定員と、1回の申込で受け付ける最大人数
@@ -201,6 +202,7 @@ function buildFormDescription_() {
     '■ 参加費：' + CONFIG.FEE_TEXT,
     '■ 定員：' + CONFIG.CAPACITY + '名（先着順）',
     '■ 申込締切：' + CONFIG.DEADLINE_TEXT + '（定員に達し次第締切）',
+    '※' + CONFIG.PARKING_NOTE,
     '',
     'お問合せ：主催 ' + CONFIG.ORGANIZER_NAME + '（TEL ' + CONFIG.ORGANIZER_TEL + '）',
   ].join('\n');
@@ -257,6 +259,7 @@ function sendConfirmation_(a) {
       '■ 参加費：' + CONFIG.FEE_TEXT + '\n' +
       '■ お申込み人数：' + a[Q.COUNT] + '\n\n' +
       '当日は受付にてお名前をお伝えください。\n' +
+      CONFIG.PARKING_NOTE + '\n' +
       '夜間の開催です。暖かい服装で、お足元に十分ご注意のうえお越しください。\n\n' +
       'ご都合が悪くなった場合は、お手数ですが下記までご連絡ください。\n\n' +
       '主催：' + CONFIG.ORGANIZER_NAME + '\n' +
