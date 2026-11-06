@@ -56,6 +56,7 @@ textarea{font:inherit;width:100%;box-sizing:border-box;min-height:70px;border:1p
 .startbar{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:14px;padding:12px 16px;display:grid;gap:8px}
 .sb-text{font-size:.9rem;min-width:0}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+.btn.quiet{color:var(--muted);font-size:.8rem}
 .sharebadge{display:none;font-size:.78rem;color:var(--muted)}
 .share .sharebadge{display:inline}
 .stage:fullscreen{display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--surface)}
@@ -207,7 +208,7 @@ function update(){
 STEPS.forEach((s,i)=>{const b=document.createElement("button");b.textContent=(i+1)+". "+s.t;b.onclick=()=>{step=i;update()};$("steps").appendChild(b)});
 $("prev").onclick=()=>{if(step>0){step--;update()}};
 $("next").onclick=()=>{if(step<STEPS.length-1){step++;update()}};
-function setShare(v){share=v;$("app").classList.toggle("share",share);$("share").setAttribute("aria-pressed",share);$("share").textContent=share?"台本に戻る":"お客様に見せる画面";
+function setShare(v){share=v;$("app").classList.toggle("share",share);$("share").setAttribute("aria-pressed",share);$("share").textContent=share?"表示切替":"お客様に見せる画面";$("share").classList.toggle("primary",!share);$("share").classList.toggle("quiet",share);
   try{history.replaceState(null,"",share?"#share":location.pathname+location.search)}catch(e){try{location.hash=share?"share":""}catch(_){}}}
 $("share").onclick=()=>setShare(!share);
 function resetPct(){$("lv-mamoru").value=35;$("lv-sonaeru").value=35;$("lv-sodateru").value=30}
