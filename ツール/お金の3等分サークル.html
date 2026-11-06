@@ -51,7 +51,15 @@ input[type=range]{width:100%}
 textarea{font:inherit;width:100%;box-sizing:border-box;min-height:70px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);padding:8px}
 .tools{display:flex;flex-wrap:wrap;gap:8px}
 .summary{font-size:1rem;margin:0}
+[hidden]{display:none!important}
 .share .presenter{display:none}
+.startbar{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:14px;padding:12px 16px;display:grid;gap:8px}
+.sb-text{font-size:.9rem;min-width:0}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+.sharebadge{display:none;font-size:.78rem;color:var(--muted)}
+.share .sharebadge{display:inline}
+.stage:fullscreen{display:flex;flex-direction:column;justify-content:center;align-items:center;background:var(--surface)}
+.stage:fullscreen svg{height:86vh;width:auto}
 .pill{display:inline-block;font-size:.75rem;border-radius:999px;padding:1px 10px;border:1px solid currentColor;margin-right:4px}
 .sl-text{font-family:var(--body);font-weight:700;paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}
 @media (prefers-reduced-motion:no-preference){.anim{transition:d .35s ease, opacity .35s ease}}
@@ -66,6 +74,15 @@ textarea{font:inherit;width:100%;box-sizing:border-box;min-height:70px;border:1p
     </div>
     <nav class="steps" id="steps" aria-label="ステップ"></nav>
   </header>
+
+  <section class="startbar presenter" aria-label="商談の準備">
+    <div class="sb-text"><b>リモート商談の始め方</b>　①「新しい商談を始める」を押す　②このタブを画面共有する前に「お客様に見せる画面」に切り替える　③ ←→キーでステップを進める</div>
+    <div class="tools">
+      <button class="btn primary" id="start">新しい商談を始める</button>
+      <button class="btn" id="full">円を全画面で表示</button>
+    </div>
+    <p class="note">ショートカット：← → ステップ移動／1〜5 ステップを選ぶ／S 画面の切り替え／F 全画面</p>
+  </section>
 
   <main>
     <section class="stage" aria-label="サークル図">
@@ -83,14 +100,14 @@ textarea{font:inherit;width:100%;box-sizing:border-box;min-height:70px;border:1p
       <section class="card" id="levels" aria-label="今の割合">
         <h2>今の割合（合計100%）</h2>
         <p class="note" id="basis">毎月、将来や万一のために回しているお金（預金・保険料・積立）を100としたときの割合です。感覚で大丈夫です。</p>
-        <div class="row"><label for="lv-mamoru" class="c-mamoru">守る</label><input type="range" id="lv-mamoru" min="0" max="100" step="5" value="30"><output id="o-mamoru"></output></div>
-        <div class="row"><label for="lv-sonaeru" class="c-sonaeru">備える</label><input type="range" id="lv-sonaeru" min="0" max="100" step="5" value="60"><output id="o-sonaeru"></output></div>
-        <div class="row"><label for="lv-sodateru" class="c-sodateru">育てる</label><input type="range" id="lv-sodateru" min="0" max="100" step="5" value="10"><output id="o-sodateru"></output></div>
-        <p class="note">1つを動かすと、残りの2つが自動で調整され、合計はいつも100%になります。初期値は記入例です。</p>
+        <div class="row"><label for="lv-mamoru" class="c-mamoru">守る</label><input type="range" id="lv-mamoru" min="0" max="100" step="5" value="35"><output id="o-mamoru"></output></div>
+        <div class="row"><label for="lv-sonaeru" class="c-sonaeru">備える</label><input type="range" id="lv-sonaeru" min="0" max="100" step="5" value="35"><output id="o-sonaeru"></output></div>
+        <div class="row"><label for="lv-sodateru" class="c-sodateru">育てる</label><input type="range" id="lv-sodateru" min="0" max="100" step="5" value="30"><output id="o-sodateru"></output></div>
+        <p class="note">1つを動かすと、残りの2つが自動で調整され、合計はいつも100%になります。</p>
         <p class="summary" id="summary"></p>
       </section>
 
-      <section class="card" aria-label="メモ">
+      <section class="card presenter" aria-label="メモ">
         <h2>面談メモ（この画面にだけ残ります）</h2>
         <textarea id="memo" placeholder="お客様が話してくれたこと、次回確認することなど"></textarea>
       </section>
@@ -98,8 +115,8 @@ textarea{font:inherit;width:100%;box-sizing:border-box;min-height:70px;border:1p
       <div class="tools">
         <button class="btn" id="prev">← 前へ</button>
         <button class="btn" id="next">次へ →</button>
-        <button class="btn" id="share" aria-pressed="false">画面共有モード</button>
-        <button class="btn" id="reset">割合をリセット</button>
+        <button class="btn primary" id="share" aria-pressed="false">お客様に見せる画面</button>
+        <button class="btn" id="reset">割合を均等に戻す</button>
       </div>
     </div>
   </main>
@@ -190,13 +207,27 @@ function update(){
 STEPS.forEach((s,i)=>{const b=document.createElement("button");b.textContent=(i+1)+". "+s.t;b.onclick=()=>{step=i;update()};$("steps").appendChild(b)});
 $("prev").onclick=()=>{if(step>0){step--;update()}};
 $("next").onclick=()=>{if(step<STEPS.length-1){step++;update()}};
-$("share").onclick=()=>{share=!share;$("app").classList.toggle("share",share);$("share").setAttribute("aria-pressed",share);$("share").textContent=share?"台本を表示":"画面共有モード"};
-$("reset").onclick=()=>{$("lv-mamoru").value=35;$("lv-sonaeru").value=35;$("lv-sodateru").value=30;update()};
+function setShare(v){share=v;$("app").classList.toggle("share",share);$("share").setAttribute("aria-pressed",share);$("share").textContent=share?"台本に戻る":"お客様に見せる画面";
+  try{history.replaceState(null,"",share?"#share":location.pathname+location.search)}catch(e){try{location.hash=share?"share":""}catch(_){}}}
+$("share").onclick=()=>setShare(!share);
+function resetPct(){$("lv-mamoru").value=35;$("lv-sonaeru").value=35;$("lv-sodateru").value=30}
+$("start").onclick=()=>{resetPct();$("memo").value="";step=0;update();$("start").textContent="準備できました ✓";setTimeout(()=>$("start").textContent="新しい商談を始める",1600)};
+function full(){const st=document.querySelector(".stage");try{if(document.fullscreenElement){document.exitFullscreen()}else{const r=st.requestFullscreen&&st.requestFullscreen();r&&r.catch&&r.catch(()=>{})}}catch(e){}}
+$("full").onclick=full;
+document.addEventListener("fullscreenchange",draw);
+$("reset").onclick=()=>{resetPct();update()};
 S.forEach(s=>$("lv-"+s.k).addEventListener("input",e=>{setPct(s.k,+e.target.value);update()}));
-document.addEventListener("keydown",e=>{if(e.target.tagName==="TEXTAREA"||e.target.tagName==="INPUT")return;if(e.key==="ArrowRight")$("next").click();if(e.key==="ArrowLeft")$("prev").click()});
+document.addEventListener("keydown",e=>{if(e.target.tagName==="TEXTAREA"||e.target.tagName==="INPUT"||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(e.key==="ArrowRight")$("next").click();else if(e.key==="ArrowLeft")$("prev").click();
+  else if(/^[1-5]$/.test(e.key)){step=+e.key-1;update()}
+  else if(e.key==="s"||e.key==="S")setShare(!share);
+  else if(e.key==="f"||e.key==="F")full();});
+function fromHash(){setShare(location.hash==="#share")}
+window.addEventListener("hashchange",fromHash);
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
 new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
 update();
+fromHash();
 </script>
 </body>
 </html>
