@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>お金の3等分サークル</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+body{margin:0}
+
+/* Layout: 左に大きな円（画面共有の主役）、右に操作とトーク台本。スマホでは縦積み */
+:root{
+  --bg:#F3F6F7; --surface:#FFFFFF; --fg:#1C2A30; --muted:#5E6E75; --line:#D3DCE0;
+  --mamoru:#2F6FA8; --sonaeru:#2E8A66; --sodateru:#D08A1E; --accent:#2F6FA8;
+  --display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12191C; --surface:#1A2428; --fg:#E6EEF0; --muted:#9AAAB0; --line:#2E3C42;
+  --mamoru:#6AA6DD; --sonaeru:#5CC096; --sodateru:#EBB05A; --accent:#6AA6DD; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12191C; --surface:#1A2428; --fg:#E6EEF0; --muted:#9AAAB0; --line:#2E3C42;
+  --mamoru:#6AA6DD; --sonaeru:#5CC096; --sodateru:#EBB05A; --accent:#6AA6DD; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.7}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-content:space-between}
+h1{font-family:var(--display);font-size:1.7rem;margin:0;letter-spacing:.04em;text-wrap:balance}
+.sub{color:var(--muted);font-size:.9rem;margin:0}
+.steps{display:flex;flex-wrap:wrap;gap:6px}
+.steps button,.btn{font:inherit;font-size:.88rem;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:6px 14px;cursor:pointer}
+.steps button[aria-current="step"]{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:820px){main{grid-template-columns:1fr}}
+.stage{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:8px}
+svg{width:100%;height:auto;max-width:100%;display:block}
+.cap{font-size:.82rem;color:var(--muted);text-align:center;margin:0}
+.panel{display:grid;gap:14px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:10px;min-width:0}
+.card h2{font-size:.78rem;letter-spacing:.12em;color:var(--muted);margin:0;font-weight:700}
+.talk{font-family:var(--display);font-size:1.08rem;line-height:1.85;margin:0}
+.talk em{font-style:normal;background:color-mix(in srgb,var(--accent) 16%,transparent);padding:0 3px;border-radius:3px}
+.note{font-size:.85rem;color:var(--muted);margin:0}
+.row{display:grid;grid-template-columns:5.5em 1fr 4.8em;gap:10px;align-items:center}
+.row label{font-weight:700}
+.row output{font-size:.85rem;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%}
+#lv-mamoru{accent-color:var(--mamoru)} #lv-sonaeru{accent-color:var(--sonaeru)} #lv-sodateru{accent-color:var(--sodateru)}
+.c-mamoru{color:var(--mamoru)} .c-sonaeru{color:var(--sonaeru)} .c-sodateru{color:var(--sodateru)}
+textarea{font:inherit;width:100%;box-sizing:border-box;min-height:70px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);padding:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.summary{font-size:1rem;margin:0}
+.share .presenter{display:none}
+.pill{display:inline-block;font-size:.75rem;border-radius:999px;padding:1px 10px;border:1px solid currentColor;margin-right:4px}
+.sl-text{font-family:var(--body);font-weight:700;paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}
+@media (prefers-reduced-motion:no-preference){.anim{transition:d .35s ease, opacity .35s ease}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div>
+      <h1>お金の3等分サークル</h1>
+      <p class="sub">守る・備える・育てる。3つの役割の割合で、お金全体のバランスを一緒に見ていきます。</p>
+    </div>
+    <nav class="steps" id="steps" aria-label="ステップ"></nav>
+  </header>
+
+  <main>
+    <section class="stage" aria-label="サークル図">
+      <svg id="svg" viewBox="0 0 440 440" role="img" aria-label="3等分の円グラフ"></svg>
+      <p class="cap" id="cap"></p>
+    </section>
+
+    <div class="panel">
+      <section class="card presenter" aria-label="トーク台本">
+        <h2>トーク（お客様には非表示にできます）</h2>
+        <p class="talk" id="talk"></p>
+        <p class="note" id="tip"></p>
+      </section>
+
+      <section class="card" id="levels" aria-label="今の割合">
+        <h2>今の割合（合計100%）</h2>
+        <p class="note" id="basis">毎月、将来や万一のために回しているお金（預金・保険料・積立）を100としたときの割合です。感覚で大丈夫です。</p>
+        <div class="row"><label for="lv-mamoru" class="c-mamoru">守る</label><input type="range" id="lv-mamoru" min="0" max="100" step="5" value="30"><output id="o-mamoru"></output></div>
+        <div class="row"><label for="lv-sonaeru" class="c-sonaeru">備える</label><input type="range" id="lv-sonaeru" min="0" max="100" step="5" value="60"><output id="o-sonaeru"></output></div>
+        <div class="row"><label for="lv-sodateru" class="c-sodateru">育てる</label><input type="range" id="lv-sodateru" min="0" max="100" step="5" value="10"><output id="o-sodateru"></output></div>
+        <p class="note">1つを動かすと、残りの2つが自動で調整され、合計はいつも100%になります。初期値は記入例です。</p>
+        <p class="summary" id="summary"></p>
+      </section>
+
+      <section class="card" aria-label="メモ">
+        <h2>面談メモ（この画面にだけ残ります）</h2>
+        <textarea id="memo" placeholder="お客様が話してくれたこと、次回確認することなど"></textarea>
+      </section>
+
+      <div class="tools">
+        <button class="btn" id="prev">← 前へ</button>
+        <button class="btn" id="next">次へ →</button>
+        <button class="btn" id="share" aria-pressed="false">画面共有モード</button>
+        <button class="btn" id="reset">割合をリセット</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const S=[
+ {k:"mamoru",n:"守る",w:"流動性",p:"銀行",a0:-90,a1:30},
+ {k:"sonaeru",n:"備える",w:"保障",p:"保険",a0:30,a1:150},
+ {k:"sodateru",n:"育てる",w:"成長",p:"証券",a0:150,a1:270}];
+const STEPS=[
+ {t:"円を描く",cap:"この円が、お金全体です。",
+  talk:"もしよかったら、私が普段どうやってお金を整理しているか、<em>この画面で一緒に見ながら</em>お伝えできればと思いますが、いかがでしょうか？<br>この円を〇〇さんの<em>お金全体</em>だと思ってください。銀行も保険も投資も、全部この1つの円の中にあります。",
+  tip:"画面共有を始めてから話します。「今この円、見えていますか？」と一度確認してください。"},
+ {t:"3等分する",cap:"3つの役割は、どれも同じくらい大事です。",
+  talk:"この円を<em>3つの役割</em>に分けます。すぐ使える<em>守る</em>お金、もしもの時の<em>備える</em>お金、将来の選択肢を広げる<em>育てる</em>お金です。<br>3等分は<em>金額を3分の1ずつにするという意味ではありません</em>。どれか1つが欠けると、円が欠けてしまうという意味です。",
+  tip:"金額を均等にする話ではないことを必ず伝えてください。"},
+ {t:"つながりを見せる",cap:"3つがそろうと、お金が回り始めます。",
+  talk:"この3つは<em>つながって回っています</em>。守るお金があるから投資を慌てて売らずに済む。備えがあるから病気でも貯金を崩さずに済む。育てたお金が、将来の守る力を厚くする。<br>どれか1つだけ頑張っても、<em>円は回りません</em>。",
+  tip:"外側の矢印を、マウスでなぞりながら話すと伝わりやすくなります。"},
+ {t:"今の割合を描く",cap:"点線が3つの役割の区切り。色の部分が、今の割合です。",
+  talk:"もしよかったら、毎月<em>将来や万一のために回しているお金</em>を100としたら、守る・備える・育てるが<em>それぞれ何割くらいか</em>、感覚で教えていただければと思いますが、いかがでしょうか？<br>だいたいで大丈夫です。",
+  tip:"預金に回す額・保険料・積立額のイメージで聞きます。お客様の答えに合わせて右のバーを動かします。リモート操作を渡して、お客様に直接動かしてもらうのも効果的です。"},
+ {t:"気づきをまとめる",cap:"今日は“なんとなくの円”で十分です。",
+  talk:"もしよかったら、次回この円に<em>実際の数字</em>を入れて、〇〇さんだけの<em>本当の円</em>を一緒に完成させられればと思いますが、いかがでしょうか？",
+  tip:"画面のスクリーンショットを撮り、次回の冒頭で「前回描いていただいたこの円ですが…」と使います。"}];
+let step=0, share=false;
+const $=id=>document.getElementById(id), NS="http://www.w3.org/2000/svg";
+const C=220, R=150;
+const pt=(a,r)=>{const t=a*Math.PI/180;return [C+r*Math.cos(t),C+r*Math.sin(t)]};
+const lv=k=>+$("lv-"+k).value;
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e}
+function arcPath(a0,a1,r){if(a1-a0>=359.99)return `M${C},${C-r} A${r},${r} 0 1 1 ${C-0.01},${C-r} Z`;
+  const [x0,y0]=pt(a0,r),[x1,y1]=pt(a1,r);return `M${C},${C} L${x0},${y0} A${r},${r} 0 ${a1-a0>180?1:0} 1 ${x1},${y1} Z`}
+function slicePath(a0,a1,r){return arcPath(a0,a1,r)}
+function setPct(k,v){
+  const others=S.filter(s=>s.k!==k), rest=100-v, cur=others.map(s=>lv(s.k)), sum=cur[0]+cur[1];
+  let o0=sum?Math.round(rest*cur[0]/sum/5)*5:Math.round(rest/2/5)*5; o0=Math.min(Math.max(o0,0),rest);
+  $("lv-"+k).value=v; $("lv-"+others[0].k).value=o0; $("lv-"+others[1].k).value=rest-o0;
+}
+function draw(){
+  const svg=$("svg");svg.innerHTML="";
+  const cs=getComputedStyle(document.documentElement), col=k=>cs.getPropertyValue("--"+k).trim();
+  const defs=el("defs",{},svg), m=el("marker",{id:"ah",viewBox:"0 0 10 10",refX:"6",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},defs);
+  el("path",{d:"M0,0 L10,5 L0,10 z",fill:col("muted")},m);
+  if(step>=3){
+    let a=-90;
+    S.forEach(s=>{const p=lv(s.k);if(p<=0)return;const a1=a+p*3.6;
+      const g=el("path",{d:arcPath(a,a1,R),fill:col(s.k),"fill-opacity":"0.85",stroke:col("surface"),"stroke-width":2},svg);
+      el("title",{},g).textContent=s.n+" "+p+"%";
+      s._mid=(a+a1)/2; a=a1;});
+    // 3つの役割の区切り（点線）
+    S.forEach(s=>{const [x,y]=pt(s.a0,R);el("line",{x1:C,y1:C,x2:x,y2:y,stroke:col("fg"),"stroke-width":1.5,"stroke-dasharray":"5 5","stroke-opacity":.6},svg)});
+    el("circle",{cx:C,cy:C,r:R,fill:"none",stroke:col("fg"),"stroke-width":2},svg);
+    S.forEach(s=>{const p=lv(s.k);if(p<6)return;const [x,y]=pt(s._mid,R*0.62);
+      const t=el("text",{x,y:y-4,"text-anchor":"middle","font-size":"20",fill:col("fg"),class:"sl-text"},svg);t.textContent=s.n;
+      const t2=el("text",{x,y:y+22,"text-anchor":"middle","font-size":"22",fill:col("fg"),class:"sl-text","font-variant-numeric":"tabular-nums"},svg);t2.textContent=p+"%";});
+  }else{
+    if(step>=1) S.forEach(s=>el("path",{d:arcPath(s.a0,s.a1,R),fill:col(s.k),"fill-opacity":"0.14"},svg));
+    el("circle",{cx:C,cy:C,r:R,fill:"none",stroke:col("fg"),"stroke-width":2.5},svg);
+    if(step>=1){
+      S.forEach(s=>{const [x,y]=pt(s.a0,R);el("line",{x1:C,y1:C,x2:x,y2:y,stroke:col("fg"),"stroke-width":2,"stroke-opacity":.7},svg)});
+      S.forEach(s=>{const mid=(s.a0+s.a1)/2,[x,y]=pt(mid,R*0.58);
+        const t=el("text",{x,y:y-6,"text-anchor":"middle","font-size":"24",fill:col(s.k),class:"sl-text"},svg);t.textContent=s.n;
+        const t2=el("text",{x,y:y+18,"text-anchor":"middle","font-size":"13",fill:col("fg"),class:"sl-text"},svg);t2.textContent=s.p+"・"+s.w;});
+    }
+  }
+  if(step>=2) S.forEach(s=>{const r=R+24,[x0,y0]=pt(s.a0+10,r),[x1,y1]=pt(s.a1-10,r);
+    el("path",{d:`M${x0},${y0} A${r},${r} 0 0 1 ${x1},${y1}`,fill:"none",stroke:col("muted"),"stroke-width":2.5,"marker-end":"url(#ah)"},svg)});
+  if(step<3) el("circle",{cx:C,cy:C,r:4,fill:col("fg")},svg);
+}
+function update(){
+  S.forEach(s=>$("o-"+s.k).textContent=lv(s.k)+"%");
+  const st=STEPS[step];
+  $("talk").innerHTML=st.talk; $("tip").textContent="ヒント："+st.tip; $("cap").textContent=st.cap;
+  $("levels").hidden=step<3;
+  $("summary").hidden=step<4;
+  if(step>=4){const v=S.map(s=>({...s,v:lv(s.k)})).sort((x,y)=>x.v-y.v), lo=v[0], hi=v[2];
+    const zero=v.filter(x=>x.v===0);
+    $("summary").innerHTML= zero.length
+      ? `<span class="pill c-${zero[0].k}">0%</span>${zero.map(x=>"「"+x.n+"」").join("")}の役割が、今は円の中にありません。<br>基準の「3つとも欠けていない」で見ると、ここが次回いっしょに確認するポイントです。`
+      : (hi.v-lo.v<=10 ? "3つの役割がそろっています。次回は、実際の数字でもこの形になっているか確かめましょう。"
+      : `<span class="pill c-${lo.k}">いちばん小さい</span>「${lo.n}」${lo.v}%　<span class="pill c-${hi.k}">いちばん大きい</span>「${hi.n}」${hi.v}%<br>点線の区切りと比べて、偏りが大きいところが、次回いっしょに確認するポイントです。`);}
+  [...$("steps").children].forEach((b,i)=>b.setAttribute("aria-current",i===step?"step":"false"));
+  $("prev").disabled=step===0; $("next").disabled=step===STEPS.length-1;
+  draw();
+}
+STEPS.forEach((s,i)=>{const b=document.createElement("button");b.textContent=(i+1)+". "+s.t;b.onclick=()=>{step=i;update()};$("steps").appendChild(b)});
+$("prev").onclick=()=>{if(step>0){step--;update()}};
+$("next").onclick=()=>{if(step<STEPS.length-1){step++;update()}};
+$("share").onclick=()=>{share=!share;$("app").classList.toggle("share",share);$("share").setAttribute("aria-pressed",share);$("share").textContent=share?"台本を表示":"画面共有モード"};
+$("reset").onclick=()=>{$("lv-mamoru").value=35;$("lv-sonaeru").value=35;$("lv-sodateru").value=30;update()};
+S.forEach(s=>$("lv-"+s.k).addEventListener("input",e=>{setPct(s.k,+e.target.value);update()}));
+document.addEventListener("keydown",e=>{if(e.target.tagName==="TEXTAREA"||e.target.tagName==="INPUT")return;if(e.key==="ArrowRight")$("next").click();if(e.key==="ArrowLeft")$("prev").click()});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+update();
+</script>
+</body>
+</html>
