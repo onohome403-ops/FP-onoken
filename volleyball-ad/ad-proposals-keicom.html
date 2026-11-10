@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>携com 協賛広告案</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Noto+Serif+JP:wght@600;900&display=swap" rel="stylesheet">
+<style>
+  /* 公式サイト（ヘッダー画像・テーマ色）から抽出 */
+  :root{
+    --navy:#053285;   /* ボタンの濃紺 */
+    --blue:#0267b9;   /* ボタンの明るい青 */
+    --sky:#009eed;    /* サイトのテーマカラー */
+    --orange:#f29f2b; /* 右肩上がりの矢印 */
+    --ink:#1b2433; --gray:#5d6675; --pale:#eef6fc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#e6e9ee;font-family:"Noto Sans JP",sans-serif;color:var(--ink);padding:24px 16px}
+  h1{font-size:18px;margin:0 auto 4px;max-width:210mm}
+  .lead{font-size:12px;color:var(--gray);margin:0 auto 6px;max-width:210mm}
+  .swatches{max-width:210mm;margin:0 auto 18px;display:flex;gap:8px;flex-wrap:wrap;font-size:11px}
+  .swatches span{display:flex;align-items:center;gap:5px}
+  .swatches i{width:16px;height:16px;border-radius:3px;display:inline-block}
+  .label{max-width:210mm;margin:28px auto 8px;font-weight:700;font-size:14px}
+  .label span{font-weight:400;color:var(--gray);font-size:12px;margin-left:8px}
+  .ad{width:210mm;height:148mm;margin:0 auto;position:relative;overflow:hidden;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .ph{display:inline-flex;align-items:center;justify-content:center;border:1.5px dashed currentColor;font-size:9pt;opacity:.85;text-align:center}
+  .logotype{font-family:"Noto Serif JP",serif;font-weight:900;letter-spacing:.02em}
+  .logotype small{font-family:"Noto Sans JP",sans-serif;font-size:.5em;font-weight:700;margin-right:1.5mm;vertical-align:.25em}
+
+  /* ===== 案A：バレー×経営（ダジャレで掴む） ===== */
+  .a{background:linear-gradient(140deg,var(--navy) 0%,var(--blue) 70%,var(--sky) 100%);color:#fff}
+  .a svg.arrow{position:absolute;left:0;top:0;width:100%;height:100%}
+  .a .tag{position:absolute;left:12mm;top:11mm;font-size:10pt;letter-spacing:.3em;font-weight:700;color:var(--orange)}
+  .a .copy{position:absolute;left:12mm;top:20mm;font-family:"Noto Serif JP",serif;font-size:27pt;font-weight:900;line-height:1.35}
+  .a .copy em{font-style:normal;color:var(--orange)}
+  .a .sub{position:absolute;left:12mm;top:62mm;font-size:10.5pt;line-height:1.7}
+  .a .pills{position:absolute;left:12mm;top:80mm;display:flex;gap:2.5mm}
+  .a .pills span{background:#fff;color:var(--navy);font-weight:700;font-size:9pt;padding:1.2mm 4mm;border-radius:10mm}
+  .a .foot{position:absolute;left:0;right:0;bottom:0;height:36mm;background:#fff;color:var(--ink);display:flex;align-items:center;padding:0 12mm;gap:7mm;border-top:1.2mm solid var(--orange)}
+  .a .co{flex:1}
+  .a .co .logotype{font-size:20pt;color:var(--navy)}
+  .a .co .svc{font-size:8.5pt;color:var(--gray);margin-top:1mm}
+  .a .co .ct{font-size:9pt;margin-top:1mm}
+  .a .cta{background:var(--orange);color:#fff;font-weight:900;font-size:10pt;padding:3mm 4mm;border-radius:2mm;text-align:center;line-height:1.4}
+  .a .qr{width:24mm;height:24mm;color:var(--navy)}
+
+  /* ===== 案B：地元から応援 ===== */
+  .b{background:var(--pale)}
+  .b .wave{position:absolute;left:0;right:0;bottom:36mm;height:40mm}
+  .b .copy{position:absolute;left:12mm;top:14mm;font-size:22pt;font-weight:900;line-height:1.5;color:var(--navy)}
+  .b .copy b{color:var(--sky)}
+  .b .sub{position:absolute;left:12mm;top:52mm;width:100mm;font-size:9.5pt;line-height:1.8}
+  .b .photo{position:absolute;right:12mm;top:12mm;width:74mm;height:62mm;border-radius:4mm;color:var(--blue);background:#fff;line-height:1.6}
+  .b .foot{position:absolute;left:0;right:0;bottom:0;height:36mm;background:var(--navy);color:#fff;display:flex;align-items:center;gap:6mm;padding:0 12mm}
+  .b .co{flex:1}
+  .b .co .logotype{font-size:19pt}
+  .b .co .svc{font-size:8.5pt;margin-top:1mm;opacity:.9}
+  .b .co .ct{font-size:9pt;margin-top:1mm}
+  .b .badge{display:inline-block;background:var(--orange);color:#fff;font-weight:700;font-size:8pt;padding:.4mm 2mm;border-radius:1mm;margin-left:1.5mm}
+  .b .qr{width:22mm;height:22mm;color:#fff}
+
+  /* ===== 案C：シンプル・サービス一覧（白黒にも強い） ===== */
+  .c{background:#fff;border:.6mm solid var(--navy)}
+  .c .topbar{position:absolute;left:0;right:0;top:0;height:5mm;background:linear-gradient(90deg,var(--navy),var(--sky))}
+  .c .tag{position:absolute;left:14mm;top:13mm;font-size:10pt;letter-spacing:.2em;color:var(--blue)}
+  .c .copy{position:absolute;left:14mm;top:21mm;font-size:22pt;font-weight:900;line-height:1.35;color:var(--navy)}
+  .c .copy small{display:block;font-size:11pt;font-weight:700;color:var(--ink);margin-top:1.5mm}
+  .c .grid{position:absolute;left:14mm;right:14mm;top:62mm;display:grid;grid-template-columns:repeat(4,1fr);gap:3mm}
+  .c .grid div{border:.35mm solid var(--navy);border-top:1.5mm solid var(--navy);padding:3mm 2mm;text-align:center;font-size:9.5pt;font-weight:700;color:var(--navy)}
+  .c .grid i{font-style:normal;display:block;font-size:8pt;color:var(--sky);font-weight:900;letter-spacing:.1em}
+  .c .grid small{display:block;font-weight:400;font-size:7.5pt;margin-top:1mm;color:var(--gray)}
+  .c .zoom{position:absolute;left:14mm;top:91mm;font-size:9pt;color:var(--ink)}
+  .c .zoom b{background:var(--navy);color:#fff;padding:.5mm 2mm;border-radius:1mm;margin-right:2mm}
+  .c .foot{position:absolute;left:14mm;right:14mm;bottom:11mm;display:flex;align-items:flex-end;gap:6mm;border-top:.4mm solid var(--navy);padding-top:3mm}
+  .c .co{flex:1}
+  .c .co .logotype{font-size:20pt;color:var(--navy)}
+  .c .co .ct{font-size:9pt;margin-top:1mm}
+  .c .qr{width:22mm;height:22mm;color:var(--navy)}
+
+  @media print{
+    body{background:#fff;padding:0}
+    h1,.lead,.label,.swatches{display:none}
+    .ad{box-shadow:none;page-break-after:always;margin:0}
+    @page{size:210mm 148mm;margin:0}
+  }
+</style>
+</head>
+<body>
+<h1>バレーボール大会 協賛広告｜株式会社 携com（A5横 210×148mm）</h1>
+<p class="lead">配色は公式サイトのヘッダー画像・テーマ色から抽出。ロゴは未入手のため社名を明朝体で仮組み。［ ］内・点線枠は差し替え用。</p>
+<div class="swatches">
+  <span><i style="background:#053285"></i>濃紺 #053285</span>
+  <span><i style="background:#0267b9"></i>青 #0267B9</span>
+  <span><i style="background:#009eed"></i>スカイ #009EED</span>
+  <span><i style="background:#f29f2b"></i>オレンジ #F29F2B</span>
+</div>
+
+<!-- 案A -->
+<p class="label">案A「バレー×経営」<span>バレー用語に引っかけて経営者の目を止める。一番インパクト重視</span></p>
+<div class="ad a">
+  <svg class="arrow" viewBox="0 0 210 148" preserveAspectRatio="none" aria-hidden="true">
+    <polyline points="110,108 135,88 150,96 178,62 196,40" fill="none" stroke="#f29f2b" stroke-width="4" stroke-linejoin="round" opacity=".9"/>
+    <polygon points="190,34 204,30 200,44" fill="#f29f2b" opacity=".9"/>
+    <polyline points="100,104 125,98 145,104 170,84 200,78" fill="none" stroke="#fff" stroke-width=".8" opacity=".35"/>
+    <circle cx="178" cy="22" r="13" fill="none" stroke="#fff" stroke-width="1.6" opacity=".25"/>
+    <path d="M166 18 Q178 26 190 18 M168 30 Q178 20 189 28" fill="none" stroke="#fff" stroke-width="1.2" opacity=".25"/>
+  </svg>
+  <div class="tag">SUPPORTING ［大会名］</div>
+  <div class="copy">ムダなコストは<em>ブロック</em>。<br>利益に向けて、<em>アタック</em>！</div>
+  <div class="sub">選手のみなさんの全力プレーを応援しています。<br>経営の「守り」と「攻め」は、私たちにトスしてください。</div>
+  <div class="pills"><span>経費削減</span><span>助成金サポート</span><span>経営コンサルティング</span></div>
+  <div class="foot">
+    <div class="co">
+      <div class="logotype"><small>株式会社</small>携com</div>
+      <div class="svc">通信費・電気料金・広告宣伝費の見直し／助成金対象診断</div>
+      <div class="ct">TEL ［電話番号］　［所在地］</div>
+    </div>
+    <div class="cta">経費診断<br>無料</div>
+    <div class="qr ph">QR</div>
+  </div>
+</div>
+
+<!-- 案B -->
+<p class="label">案B「地元から応援」<span>地域密着・温かさ重視。保護者の中の経営者・個人事業主に届ける</span></p>
+<div class="ad b">
+  <svg class="wave" viewBox="0 0 210 40" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 22 C40 8 80 34 120 20 C155 8 185 16 210 10 L210 40 L0 40Z" fill="#009eed" opacity=".18"/>
+    <path d="M0 30 C50 18 95 40 140 28 C170 20 195 26 210 22 L210 40 L0 40Z" fill="#0267b9" opacity=".22"/>
+  </svg>
+  <div class="copy">がんばる選手と、<br>がんばる<b>経営者</b>を、<br>地元から応援します。</div>
+  <div class="sub">チームを支える保護者のみなさまの中には、<br>お店や会社を営む方も多いはず。<br>経費の見直しや助成金の活用で、本業に集中できる毎日を。</div>
+  <div class="photo ph">写真エリア<br>（大会会場・ボール・<br>ネット越しのカットなど）</div>
+  <div class="foot">
+    <div class="co">
+      <div class="logotype"><small>株式会社</small>携com</div>
+      <div class="svc">経費削減・助成金・経営のご相談<span class="badge">ZOOM面談OK</span></div>
+      <div class="ct">TEL ［電話番号］　［所在地］</div>
+    </div>
+    <div class="qr ph">QR</div>
+  </div>
+</div>
+
+<!-- 案C -->
+<p class="label">案C「シンプル・サービス一覧」<span>4つの事業がひと目で分かる。白黒印刷でも崩れない</span></p>
+<div class="ad c">
+  <div class="topbar"></div>
+  <div class="tag">［第◯回 ◯◯バレーボール大会］ 協賛</div>
+  <div class="copy">経営者のコストや資金の悩みを、<br>ワンチームで解決。<small>まずは無料の「経費調査診断」から。</small></div>
+  <div class="grid">
+    <div><i>01</i>助成金対象診断<small>使える制度をチェック</small></div>
+    <div><i>02</i>通信費削減<small>携帯・回線の見直し</small></div>
+    <div><i>03</i>電気料金診断<small>契約プランの最適化</small></div>
+    <div><i>04</i>広告宣伝費削減<small>費用対効果を改善</small></div>
+  </div>
+  <div class="zoom"><b>ZOOM面談OK</b>顔の見えるオンライン面談で、遠方からもご相談いただけます。</div>
+  <div class="foot">
+    <div class="co">
+      <div class="logotype"><small>株式会社</small>携com</div>
+      <div class="ct">TEL ［電話番号］　［所在地］</div>
+    </div>
+    <div class="qr ph">QR</div>
+  </div>
+</div>
+</body>
+</html>
