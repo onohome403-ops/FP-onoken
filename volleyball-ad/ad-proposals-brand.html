@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>協賛広告 ブランドカラー版</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Noto+Serif+JP:wght@600;900&display=swap" rel="stylesheet">
+<style>
+  /* ブランドカラー（公式ロゴから抽出） */
+  :root{
+    --pink:#e9569a;      /* メイン：ロゴのピンク */
+    --pink-deep:#c43a7c; /* 濃い側（グラデ・強調用） */
+    --pink-light:#f8cfe0;/* ロゴのグラデ明部 */
+    --pink-pale:#fdf0f6; /* 背景用 */
+    --berry:#6e1f47;     /* 本文用の濃色（ピンク系の黒） */
+    --peach:#f6a068;     /* 公式サイトのサブアクセント */
+    --gray:#7a6a72;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#ece8ea;font-family:"Noto Sans JP",sans-serif;color:var(--berry);padding:24px 16px}
+  h1{font-size:18px;margin:0 auto 4px;max-width:210mm}
+  .lead{font-size:12px;color:var(--gray);margin:0 auto 6px;max-width:210mm}
+  .swatches{max-width:210mm;margin:0 auto 18px;display:flex;gap:8px;flex-wrap:wrap;font-size:11px}
+  .swatches span{display:flex;align-items:center;gap:5px}
+  .swatches i{width:16px;height:16px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.1)}
+  .label{max-width:210mm;margin:28px auto 8px;font-weight:700;font-size:14px}
+  .label span{font-weight:400;color:var(--gray);font-size:12px;margin-left:8px}
+  .ad{width:210mm;height:148mm;margin:0 auto;position:relative;overflow:hidden;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .ph{display:inline-flex;align-items:center;justify-content:center;border:1.5px dashed currentColor;font-size:9pt;opacity:.85;text-align:center}
+  .logo-v{display:block;height:auto}
+  .logo-h{display:block;height:auto}
+
+  /* ===== 案A：スポーティ・応援 ===== */
+  .a{background:linear-gradient(135deg,var(--pink) 0%,var(--pink-deep) 100%);color:#fff}
+  .a .slash{position:absolute;inset:0;background:linear-gradient(115deg,transparent 54%,rgba(255,255,255,.95) 54%,rgba(255,255,255,.95) 56%,transparent 56%,transparent 59%,var(--pink-light) 59%,var(--pink-light) 66%,transparent 66%)}
+  .a .ball{position:absolute;right:-16mm;top:-20mm;width:82mm;height:82mm;border-radius:50%;border:2.5mm solid rgba(255,255,255,.18)}
+  .a .ball::before,.a .ball::after{content:"";position:absolute;inset:8mm -10mm;border:2.5mm solid rgba(255,255,255,.18);border-radius:50%;transform:rotate(35deg)}
+  .a .ball::after{transform:rotate(-35deg)}
+  .a .tag{position:absolute;left:12mm;top:12mm;font-size:10pt;letter-spacing:.3em;font-weight:700;color:#fff;opacity:.9}
+  .a .copy{position:absolute;left:12mm;top:22mm;font-size:30pt;font-weight:900;line-height:1.25;text-shadow:0 .5mm 1.5mm rgba(110,31,71,.25)}
+  .a .copy em{font-style:normal;background:#fff;color:var(--pink-deep);padding:0 2mm;line-height:1.5}
+  .a .sub{position:absolute;left:12mm;top:72mm;font-size:11pt;line-height:1.7}
+  .a .foot{position:absolute;left:0;right:0;bottom:0;height:38mm;background:#fff;color:var(--berry);display:flex;align-items:center;padding:0 12mm;gap:6mm;border-top:1.2mm solid var(--pink-light)}
+  .a .foot .logo-v{width:30mm}
+  .a .co{flex:1}
+  .a .co .name{font-size:14pt;font-weight:900}
+  .a .co .br{font-size:10pt;font-weight:700;color:var(--pink)}
+  .a .co .svc{font-size:8.5pt;color:var(--gray);margin-top:1.5mm}
+  .a .co .ct{font-size:9pt;margin-top:1mm}
+  .a .qr{width:24mm;height:24mm;color:var(--pink)}
+
+  /* ===== 案B：家族・未来（ハートモチーフ） ===== */
+  .b{background:var(--pink-pale)}
+  .b .heart{position:absolute;right:-6mm;top:-4mm;width:110mm;height:110mm;opacity:.9}
+  .b .photo{position:absolute;right:20mm;top:20mm;width:70mm;height:62mm;border-radius:50% 50% 46% 46%;color:var(--pink-deep);background:rgba(255,255,255,.85);padding:6mm;line-height:1.6}
+  .b .copy{position:absolute;left:12mm;top:16mm;font-family:"Noto Serif JP",serif;font-size:21pt;font-weight:900;line-height:1.6}
+  .b .copy b{color:var(--pink)}
+  .b .sub{position:absolute;left:12mm;top:63mm;width:90mm;font-size:9.5pt;line-height:1.8}
+  .b .foot{position:absolute;left:0;right:0;bottom:0;height:36mm;background:#fff;display:flex;align-items:center;gap:6mm;padding:0 12mm;border-top:.6mm solid var(--pink)}
+  .b .foot .logo-v{width:28mm}
+  .b .co{flex:1}
+  .b .co .name{font-size:14pt;font-weight:900}
+  .b .co .name small{font-size:10pt;margin-left:2mm;color:var(--pink)}
+  .b .co .svc{font-size:8.5pt;margin-top:1.5mm}
+  .b .co .badge{display:inline-block;background:var(--peach);color:#fff;font-weight:700;font-size:8pt;padding:.4mm 2mm;border-radius:1mm;margin-left:1mm}
+  .b .co .ct{font-size:9pt;margin-top:1mm}
+  .b .qr{width:22mm;height:22mm;color:var(--pink)}
+
+  /* ===== 案C：シンプル・信頼（白黒にも強い） ===== */
+  .c{background:#fff;border:.6mm solid var(--pink)}
+  .c .topbar{position:absolute;left:0;right:0;top:0;height:5mm;background:linear-gradient(90deg,var(--pink),var(--pink-light))}
+  .c .tag{position:absolute;left:14mm;top:15mm;font-size:10pt;letter-spacing:.2em;color:var(--pink-deep)}
+  .c .copy{position:absolute;left:14mm;top:23mm;font-size:24pt;font-weight:900;line-height:1.3}
+  .c .net{position:absolute;left:0;right:0;top:53mm;height:9mm;background:
+      repeating-linear-gradient(90deg,var(--pink) 0 .35mm,transparent .35mm 5mm),
+      repeating-linear-gradient(0deg,var(--pink) 0 .35mm,transparent .35mm 4.5mm);opacity:.25}
+  .c .band{position:absolute;left:0;right:0;top:52mm;height:.9mm;background:var(--pink)}
+  .c .grid{position:absolute;left:14mm;right:14mm;top:72mm;display:grid;grid-template-columns:repeat(4,1fr);gap:3mm}
+  .c .grid div{border:.35mm solid var(--pink);border-top:1.5mm solid var(--pink);padding:3mm 2mm;text-align:center;font-size:9.5pt;font-weight:700}
+  .c .grid small{display:block;font-weight:400;font-size:7.5pt;margin-top:1mm;color:var(--gray)}
+  .c .foot{position:absolute;left:14mm;right:14mm;bottom:11mm;display:flex;align-items:flex-end;gap:6mm}
+  .c .foot .logo-h{width:62mm;margin-bottom:1.5mm}
+  .c .co{flex:1}
+  .c .co .br{font-size:10pt;font-weight:700}
+  .c .co .ct{font-size:9pt;margin-top:1mm}
+  .c .qr{width:22mm;height:22mm;color:var(--pink)}
+  .c .note{position:absolute;right:14mm;bottom:4mm;font-size:6.5pt;color:var(--gray)}
+
+  @media print{
+    body{background:#fff;padding:0}
+    h1,.lead,.label,.swatches{display:none}
+    .ad{box-shadow:none;page-break-after:always;margin:0}
+    @page{size:210mm 148mm;margin:0}
+  }
+</style>
+</head>
+<body>
+<h1>バレーボール大会 協賛広告 ブランドカラー版（A5横 210×148mm）</h1>
+<p class="lead">配色は公式サイトのロゴから抽出。［ ］内・点線枠は差し替え用。</p>
+<div class="swatches">
+  <span><i style="background:#e9569a"></i>メイン #E9569A</span>
+  <span><i style="background:#c43a7c"></i>濃 #C43A7C</span>
+  <span><i style="background:#f8cfe0"></i>淡 #F8CFE0</span>
+  <span><i style="background:#6e1f47"></i>文字 #6E1F47</span>
+  <span><i style="background:#f6a068"></i>差し色 #F6A068</span>
+</div>
+
+<!-- 案A -->
+<p class="label">案A「スポーティ・応援」<span>ピンク全面で誌面の中で一番目立つ</span></p>
+<div class="ad a">
+  <div class="slash"></div><div class="ball"></div>
+  <div class="tag">SUPPORTING ［大会名］</div>
+  <div class="copy">その一球に、<br><em>全力のエールを。</em></div>
+  <div class="sub">仲間を信じてつなぐ一本一本が、未来をつくる。<br>私たちは、がんばるすべての選手を応援しています。</div>
+  <div class="foot">
+    <img class="logo-v" src="assets/logo-vertical.png" alt="Gift Your Life">
+    <div class="co">
+      <div class="name">Gift Your Life株式会社</div>
+      <div class="br">仙台支社</div>
+      <div class="svc">生命保険・損害保険　｜　資産運用相談　｜　ライフプランニング</div>
+      <div class="ct">TEL ［代表番号］　〒［郵便番号］ ［所在地］</div>
+    </div>
+    <div class="qr ph">QR</div>
+  </div>
+</div>
+
+<!-- 案B -->
+<p class="label">案B「家族・未来」<span>ロゴのハートを背景モチーフに。保護者向け・ジュニア大会に</span></p>
+<div class="ad b">
+  <svg class="heart" viewBox="0 0 100 100" aria-hidden="true">
+    <defs><linearGradient id="hg" x1="0" x2="1"><stop offset="0" stop-color="#e9569a" stop-opacity=".35"/><stop offset="1" stop-color="#f8cfe0" stop-opacity=".25"/></linearGradient></defs>
+    <path d="M50 92 C20 70 4 52 4 32 C4 16 16 6 29 6 C39 6 46 12 50 19 C54 12 61 6 71 6 C84 6 96 16 96 32 C96 52 80 70 50 92Z" fill="url(#hg)"/>
+  </svg>
+  <div class="photo ph">写真エリア<br>（選手の後ろ姿・<br>ボールを追う手元など<br>顔が映らないカット推奨）</div>
+  <div class="copy">子どもたちの<b>夢</b>と、<br>家族の<b>未来</b>を、<br>まるごと応援。</div>
+  <div class="sub">夢中になれる時間は、一生の財産。<br>教育資金や家計の「これから」の不安は、お金の専門家にお気軽にご相談ください。</div>
+  <div class="foot">
+    <img class="logo-v" src="assets/logo-vertical.png" alt="Gift Your Life">
+    <div class="co">
+      <div class="name">Gift Your Life株式会社<small>仙台支社</small></div>
+      <div class="svc">保険の見直し・教育資金・資産形成のご相談<span class="badge">相談無料</span></div>
+      <div class="ct">TEL ［代表番号］　［所在地］</div>
+    </div>
+    <div class="qr ph">QR</div>
+  </div>
+</div>
+
+<!-- 案C -->
+<p class="label">案C「シンプル・信頼」<span>白基調＋ピンクの線。白黒印刷でもグレーの線として成立</span></p>
+<div class="ad c">
+  <div class="topbar"></div>
+  <div class="tag">［第◯回 ◯◯バレーボール大会］ 協賛</div>
+  <div class="copy">つなぐ力を、<br>暮らしの安心に。</div>
+  <div class="net"></div><div class="band"></div>
+  <div class="grid">
+    <div>生命保険<small>保障の見直し</small></div>
+    <div>損害保険<small>自動車・火災ほか</small></div>
+    <div>資産運用<small>NISA・iDeCo相談</small></div>
+    <div>ライフプラン<small>教育・老後資金</small></div>
+  </div>
+  <div class="foot">
+    <div class="co">
+      <img class="logo-h" src="assets/logo-horizontal.png" alt="Gift Your Life">
+      <div class="br">Gift Your Life株式会社 仙台支社　｜　TEL ［代表番号］</div>
+      <div class="ct">［所在地］　［受付時間］</div>
+    </div>
+    <div class="qr ph">QR</div>
+  </div>
+  <div class="note">［募集文書管理番号など社内審査の表示欄］</div>
+</div>
+</body>
+</html>
