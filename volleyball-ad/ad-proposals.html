@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>バレー大会 協賛広告案</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Noto+Serif+JP:wght@600;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0b2a4a; --orange:#f26b1d; --sky:#2a8bd8; --cream:#fff8ee; --ink:#1d1d1f; --gray:#6b6b70;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#e9ebef;font-family:"Noto Sans JP",sans-serif;color:var(--ink);padding:24px 16px}
+  h1{font-size:18px;margin:0 auto 4px;max-width:210mm}
+  .lead{font-size:12px;color:var(--gray);margin:0 auto 20px;max-width:210mm}
+  .label{max-width:210mm;margin:28px auto 8px;font-weight:700;font-size:14px}
+  .label span{font-weight:400;color:var(--gray);font-size:12px;margin-left:8px}
+  /* A4半分＝A5横 210×148mm */
+  .ad{width:210mm;height:148mm;margin:0 auto;position:relative;overflow:hidden;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .ph{display:inline-flex;align-items:center;justify-content:center;border:1.5px dashed currentColor;font-size:9pt;opacity:.8}
+
+  /* ===== 案A：スポーティ ===== */
+  .a{background:var(--navy);color:#fff}
+  .a .slash{position:absolute;inset:0;background:linear-gradient(115deg,transparent 52%,var(--orange) 52%,var(--orange) 60%,transparent 60%,transparent 63%,var(--sky) 63%,var(--sky) 66%,transparent 66%)}
+  .a .ball{position:absolute;right:-18mm;top:-18mm;width:80mm;height:80mm;border-radius:50%;border:2.5mm solid rgba(255,255,255,.12)}
+  .a .ball::before,.a .ball::after{content:"";position:absolute;inset:8mm -10mm;border:2.5mm solid rgba(255,255,255,.12);border-radius:50%;transform:rotate(35deg)}
+  .a .ball::after{transform:rotate(-35deg)}
+  .a .tag{position:absolute;left:12mm;top:12mm;font-size:10pt;letter-spacing:.3em;color:var(--orange);font-weight:700}
+  .a .copy{position:absolute;left:12mm;top:22mm;font-size:30pt;font-weight:900;line-height:1.25;letter-spacing:.02em}
+  .a .copy em{font-style:normal;color:var(--orange)}
+  .a .sub{position:absolute;left:12mm;top:70mm;font-size:11pt;line-height:1.7;opacity:.9}
+  .a .foot{position:absolute;left:0;right:0;bottom:0;height:38mm;background:#fff;color:var(--navy);display:flex;align-items:center;padding:0 12mm;gap:8mm}
+  .a .co{flex:1}
+  .a .co .name{font-size:18pt;font-weight:900}
+  .a .co .br{font-size:10pt;font-weight:700;color:var(--orange)}
+  .a .co .svc{font-size:8.5pt;color:var(--gray);margin-top:2mm}
+  .a .co .ct{font-size:9pt;margin-top:1.5mm}
+  .a .qr{width:24mm;height:24mm;color:var(--navy)}
+
+  /* ===== 案B：家族・未来 ===== */
+  .b{background:var(--cream)}
+  .b .arc{position:absolute;left:-30mm;bottom:-120mm;width:270mm;height:200mm;border-radius:50%;background:#ffe3c7}
+  .b .photo{position:absolute;right:10mm;top:10mm;width:88mm;height:88mm;border-radius:50%;color:#c9864a;background:#fff;text-align:center;line-height:1.6;padding:10mm}
+  .b .copy{position:absolute;left:12mm;top:16mm;font-family:"Noto Serif JP",serif;font-size:21pt;font-weight:900;line-height:1.6;color:#5a3418}
+  .b .copy b{color:var(--orange)}
+  .b .sub{position:absolute;left:12mm;top:62mm;width:92mm;font-size:9.5pt;line-height:1.8;color:#5a3418}
+  .b .foot{position:absolute;left:12mm;right:12mm;bottom:10mm;display:flex;align-items:flex-end;gap:6mm;border-top:.4mm solid #c9864a;padding-top:4mm}
+  .b .co{flex:1;color:#5a3418}
+  .b .co .name{font-size:17pt;font-weight:900}
+  .b .co .name small{font-size:10pt;margin-left:2mm}
+  .b .co .svc{font-size:8.5pt;margin-top:1.5mm}
+  .b .co .ct{font-size:9pt;margin-top:1mm}
+  .b .qr{width:22mm;height:22mm;color:#c9864a}
+
+  /* ===== 案C：シンプル・信頼（モノクロ対応） ===== */
+  .c{background:#fff;border:.6mm solid #111}
+  .c .net{position:absolute;left:0;right:0;top:50mm;height:10mm;background:
+      repeating-linear-gradient(90deg,#111 0 .35mm,transparent .35mm 5mm),
+      repeating-linear-gradient(0deg,#111 0 .35mm,transparent .35mm 5mm);opacity:.12}
+  .c .band{position:absolute;left:0;right:0;top:49mm;height:.8mm;background:#111}
+  .c .tag{position:absolute;left:14mm;top:14mm;font-size:10pt;letter-spacing:.2em}
+  .c .copy{position:absolute;left:14mm;top:22mm;font-size:24pt;font-weight:900;line-height:1.3}
+  .c .grid{position:absolute;left:14mm;right:14mm;top:68mm;display:grid;grid-template-columns:repeat(4,1fr);gap:3mm}
+  .c .grid div{border:.35mm solid #111;padding:3mm 2mm;text-align:center;font-size:9pt;font-weight:700}
+  .c .grid small{display:block;font-weight:400;font-size:7.5pt;margin-top:1mm;color:#444}
+  .c .foot{position:absolute;left:14mm;right:14mm;bottom:12mm;display:flex;align-items:flex-end;gap:6mm}
+  .c .co{flex:1}
+  .c .co .name{font-size:19pt;font-weight:900}
+  .c .co .br{font-size:10pt}
+  .c .co .ct{font-size:9pt;margin-top:1.5mm}
+  .c .qr{width:22mm;height:22mm}
+  .c .note{position:absolute;right:14mm;bottom:5mm;font-size:6.5pt;color:#555}
+
+  @media print{
+    body{background:#fff;padding:0}
+    h1,.lead,.label{display:none}
+    .ad{box-shadow:none;page-break-after:always;margin:0}
+    @page{size:210mm 148mm;margin:0}
+  }
+</style>
+</head>
+<body>
+<h1>バレーボール大会 協賛広告 デザイン案（A4半分＝A5横 210×148mm）</h1>
+<p class="lead">［ ］内・点線枠は差し替え用のプレースホルダーです。印刷時は「背景のグラフィック」をONにすると原寸で出力できます。</p>
+
+<!-- 案A -->
+<p class="label">案A「スポーティ・応援」<span>大会パンフの中で一番目立たせたい場合。カラー印刷向け</span></p>
+<div class="ad a">
+  <div class="slash"></div><div class="ball"></div>
+  <div class="tag">SUPPORTING ［大会名］</div>
+  <div class="copy">その一球に、<br><em>全力のエールを。</em></div>
+  <div class="sub">仲間を信じてつなぐ一本一本が、未来をつくる。<br>私たちは、がんばるすべての選手を応援しています。</div>
+  <div class="foot">
+    <div class="co">
+      <div class="name">Gift Your Life株式会社</div>
+      <div class="br">仙台支社</div>
+      <div class="svc">生命保険・損害保険　｜　資産運用相談　｜　ライフプランニング</div>
+      <div class="ct">TEL ［代表番号］　〒［郵便番号］ ［所在地］</div>
+    </div>
+    <div class="qr ph">QR</div>
+  </div>
+</div>
+
+<!-- 案B -->
+<p class="label">案B「家族・未来」<span>保護者向けの共感重視。ジュニア大会におすすめ</span></p>
+<div class="ad b">
+  <div class="arc"></div>
+  <div class="photo ph">写真エリア<br>（選手の後ろ姿・<br>ボールを追う手元など<br>顔が映らないカット推奨）</div>
+  <div class="copy">子どもたちの<b>夢</b>と、<br>家族の<b>未来</b>を、<br>まるごと応援。</div>
+  <div class="sub">夢中になれる時間は、一生の財産。<br>教育資金や家計の「これから」の不安は、お金の専門家にお気軽にご相談ください。</div>
+  <div class="foot">
+    <div class="co">
+      <div class="name">Gift Your Life株式会社<small>仙台支社</small></div>
+      <div class="svc">保険の見直し・教育資金・資産形成のご相談（相談無料）</div>
+      <div class="ct">TEL ［代表番号］　［所在地］</div>
+    </div>
+    <div class="qr ph">QR</div>
+  </div>
+</div>
+
+<!-- 案C -->
+<p class="label">案C「シンプル・信頼」<span>白黒印刷でも崩れない構成。パンフがモノクロの場合はこれ</span></p>
+<div class="ad c">
+  <div class="tag">［第◯回 ◯◯バレーボール大会］ 協賛</div>
+  <div class="copy">つなぐ力を、<br>暮らしの安心に。</div>
+  <div class="net"></div><div class="band"></div>
+  <div class="grid">
+    <div>生命保険<small>保障の見直し</small></div>
+    <div>損害保険<small>自動車・火災ほか</small></div>
+    <div>資産運用<small>NISA・iDeCo相談</small></div>
+    <div>ライフプラン<small>教育・老後資金</small></div>
+  </div>
+  <div class="foot">
+    <div class="co">
+      <div class="name">Gift Your Life株式会社</div>
+      <div class="br">仙台支社　｜　TEL ［代表番号］</div>
+      <div class="ct">［所在地］　［受付時間］</div>
+    </div>
+    <div class="qr ph">QR</div>
+  </div>
+  <div class="note">［募集文書管理番号など社内審査の表示欄］</div>
+</div>
+</body>
+</html>
