@@ -12,7 +12,12 @@ const CONFIG = {
   BOOKING_CALENDAR_ID: 'primary',
 
   // 空き判定に使うカレンダー（仕事用・家族用など、予定を見たいものを全部並べる）
-  CHECK_CALENDAR_IDS: ['primary'],
+  // 'primary'（メイン）、カレンダーの名前（Googleカレンダーの左の一覧に出ている名前そのまま）、
+  // またはカレンダーID（…@group.calendar.google.com）のどれでも書ける。
+  // このコードは公開リポジトリにあるので、IDではなく名前で書く
+  // 「家族（仕事ダメ）」＝妻と共有。ここに入れた予定は、妻が入れたものでも枠を止める
+  // 「家族（仕事OK）」（Googleファミリーのカレンダー）はあえて入れない（入れた予定は枠を止めない）
+  CHECK_CALENDAR_IDS: ['primary', '家族（仕事ダメ）'],
 
   // 枠の開始時刻（毎日）と1枠の長さ（分）
   // 曜日ごとの枠の開始時刻（0=日, 1=月, 2=火, 3=水, 4=木, 5=金, 6=土）。空配列 [] でその曜日は受付なし
@@ -267,10 +272,18 @@ function groupByDate_(slots) {
 
 /* ===================== カレンダー ===================== */
 
+/** 'primary' / カレンダーID（@を含む）/ カレンダーの名前 のどれかからカレンダーを返す */
 function getCalendar_(id) {
-  const cal = id === 'primary' ? CalendarApp.getDefaultCalendar() : CalendarApp.getCalendarById(id);
-  if (!cal) throw new Error(`カレンダーが見つかりません: ${id}`);
-  return cal;
+  if (id === 'primary') return CalendarApp.getDefaultCalendar();
+  if (String(id).indexOf('@') !== -1) {
+    const cal = CalendarApp.getCalendarById(id);
+    if (!cal) throw new Error(`カレンダーが見つかりません: ${id}`);
+    return cal;
+  }
+  const found = CalendarApp.getCalendarsByName(id);
+  if (found.length === 0) throw new Error(`「${id}」という名前のカレンダーが見つかりません。名前を変えた場合は CONFIG も直してください`);
+  if (found.length > 1) throw new Error(`「${id}」という名前のカレンダーが ${found.length} 個あります。どちらかの名前を変えてください`);
+  return found[0];
 }
 
 /** 確認対象カレンダーの予定を busy 区間として取得 */
