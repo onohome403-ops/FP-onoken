@@ -53,7 +53,12 @@ const CONFIG = {
 
   // 表示・メール用
   TITLE: 'オンライン個別相談のご予約',
-  OWNER_NAME: '担当FP',
+  OWNER_NAME: 'Gift Your Life株式会社 小野 健汰', // メールの差出人名
+  // メールの最後に入れる署名（1行ずつ）
+  SIGNATURE: [
+    'Gift Your Life株式会社',
+    'ファイナンシャルプランナー　小野 健汰',
+  ],
   OWNER_NOTIFY_EMAIL: '', // 空なら、このスクリプトのオーナー（自分）に通知
   EVENT_TITLE_PREFIX: '【個別相談】',
   // Web予約はオンラインのみ。対面の予定は自分でカレンダーに直接入れる運用
@@ -73,11 +78,31 @@ const CONFIG = {
   REMIND_HOURS_BEFORE: 24,
   // 予約からこの時間以内に始まる相談は、確認メールを送ったばかりなのでリマインドを省略
   REMIND_SKIP_IF_BOOKED_WITHIN_HOURS: 12,
+
+  // お客様が自分でキャンセルできるリンクを、確認メールとリマインドメールに付けるか
+  CANCEL_ENABLED: true,
+  // 開始の何時間前までリンクでキャンセルできるか（0 = 開始時刻まで）。過ぎたら「メールでご連絡を」と表示
+  CANCEL_MIN_HOURS_BEFORE: 0,
+  // 予約ページのURL（…/exec）。空なら自動で取得する。リンクがうまく開かないときだけ、デプロイ後のURLを貼る
+  WEB_APP_URL: '',
 };
 
 /* ===================== Web画面 ===================== */
 
-function doGet() {
+function doGet(e) {
+  // キャンセル用リンク（?cancel=…）から開かれたとき。開いただけでは取り消さず、確認ボタンを押してもらう
+  const cancelToken = e && e.parameter && e.parameter.cancel;
+  if (cancelToken) {
+    const page = HtmlService.createTemplateFromFile('Cancel');
+    page.title = CONFIG.TITLE;
+    page.token = String(cancelToken);
+    page.info = getCancelInfo_(String(cancelToken));
+    return page.evaluate()
+      .setTitle('ご予約のキャンセル')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
+
   const tpl = HtmlService.createTemplateFromFile('Index');
   tpl.config = {
     title: CONFIG.TITLE,
@@ -146,6 +171,7 @@ function bookSlot(form) {
       }
     }
 
+    const cancelToken = CONFIG.CANCEL_ENABLED ? Utilities.getUuid().replace(/-/g, '') : '';
     try {
       const event = getCalendar_(CONFIG.BOOKING_CALENDAR_ID).createEvent(title, slot.start, slot.end, {
         description: (zoom ? buildZoomText_(zoom) + '\n\n' : '') + buildEventDescription_(data),
@@ -161,12 +187,17 @@ function bookSlot(form) {
         event.setTag('zoomJoinUrl', zoom.joinUrl);
         event.setTag('zoomPassword', zoom.password);
       }
+      if (cancelToken) {
+        // キャンセル用リンクの合言葉 → 予定を探せるように保存
+        event.setTag('cancelToken', cancelToken);
+        PropertiesService.getScriptProperties().setProperty(CANCEL_PROP_PREFIX + cancelToken, event.getId());
+      }
     } catch (e) {
       if (zoom) deleteZoomMeeting_(zoom.id); // 予定を作れなかったら発行したZoomも取り消す
       throw e;
     }
 
-    sendMails_(data, when, zoom, zoomError);
+    sendMails_(data, when, zoom, zoomError, cancelToken ? cancelUrl_(cancelToken) : '');
     return { when: when, name: data.name, method: data.method, zoomUrl: zoom ? zoom.joinUrl : '' };
   } finally {
     lock.releaseLock();
@@ -274,7 +305,18 @@ function buildEventDescription_(d) {
 
 /* ===================== メール ===================== */
 
-function sendMails_(d, when, zoom, zoomError) {
+function signature_() {
+  return (CONFIG.SIGNATURE && CONFIG.SIGNATURE.length ? CONFIG.SIGNATURE : [CONFIG.OWNER_NAME]).join('\n');
+}
+
+/** キャンセルの案内文（リンクが作れないときは返信での案内） */
+function cancelGuide_(url) {
+  return url
+    ? `ご都合が悪くなった場合は、下のリンクからキャンセルできます。\n${url}\n日程の変更をご希望の場合は、このメールにご返信ください。`
+    : '日程の変更・キャンセルは、このメールにご返信ください。';
+}
+
+function sendMails_(d, when, zoom, zoomError, cancelUrl) {
   const ownerEmail = CONFIG.OWNER_NOTIFY_EMAIL || Session.getEffectiveUser().getEmail();
 
   MailApp.sendEmail({
@@ -297,11 +339,12 @@ function sendMails_(d, when, zoom, zoomError) {
         : d.method.indexOf('オンライン') !== -1
           ? '接続用URLは前日までに改めてご連絡いたします。'
           : '詳細は前日までに改めてご連絡いたします。',
-      '日程の変更・キャンセルは、このメールにご返信ください。',
+      '',
+      cancelGuide_(cancelUrl),
       '',
       '当日お会いできることを楽しみにしております。',
       '',
-      CONFIG.OWNER_NAME,
+      signature_(),
     ].join('\n'),
   });
 
@@ -372,9 +415,9 @@ function sendReminders() {
           '・現在ご加入中の保険証券（お手元にあれば）',
           '・メモをとれるもの',
           '',
-          'ご都合が悪くなった場合は、このメールにご返信ください。',
+          cancelGuide_(ev.getTag('cancelToken') && CONFIG.CANCEL_ENABLED ? cancelUrl_(ev.getTag('cancelToken')) : ''),
           '',
-          CONFIG.OWNER_NAME,
+          signature_(),
         ].join('\n'),
       });
       ev.setTag('reminded', new Date().toISOString());
@@ -382,6 +425,131 @@ function sendReminders() {
       console.error(`リマインド送信失敗（${when}）: ${e}`);
     }
   });
+
+  // 1日1回（深夜3時台）、終わった予約のキャンセル用合言葉を片付ける
+  if (hmOf_(now).slice(0, 2) === '03') {
+    try { cleanupCancelTokens_(); } catch (e) { console.error('合言葉の片付けに失敗: ' + e); }
+  }
+}
+
+/* ===================== お客様によるキャンセル ===================== */
+
+const CANCEL_PROP_PREFIX = 'cancel_';
+
+function cancelUrl_(token) {
+  let base = CONFIG.WEB_APP_URL;
+  if (!base) {
+    try { base = ScriptApp.getService().getUrl(); } catch (e) { base = ''; }
+  }
+  return base ? `${base}?cancel=${token}` : '';
+}
+
+/** 合言葉からWeb予約の予定を探す。見つからなければ null */
+function findBookingByToken_(token) {
+  if (!/^[0-9a-f]{32}$/.test(token)) return null;
+  const id = PropertiesService.getScriptProperties().getProperty(CANCEL_PROP_PREFIX + token);
+  if (!id) return null;
+  const ev = getCalendar_(CONFIG.BOOKING_CALENDAR_ID).getEventById(id);
+  if (!ev || ev.getTag('cancelToken') !== token) return null;
+  return ev;
+}
+
+/** キャンセルできる状態かを調べる。status: ok / gone（取消済み・見つからない）/ closed（期限切れ）/ off */
+function checkCancelable_(ev) {
+  if (!CONFIG.CANCEL_ENABLED) return 'off';
+  if (!ev) return 'gone';
+  const deadline = ev.getStartTime().getTime() - CONFIG.CANCEL_MIN_HOURS_BEFORE * 3600 * 1000;
+  return Date.now() < deadline ? 'ok' : 'closed';
+}
+
+/** キャンセル画面の表示内容（画面を開いただけでは何も変えない） */
+function getCancelInfo_(token) {
+  const ev = findBookingByToken_(token);
+  const status = checkCancelable_(ev);
+  return {
+    status: status,
+    when: ev ? formatRangeLabel_(ev.getStartTime(), ev.getEndTime()) : '',
+    name: ev ? ev.getTag('customerName') || '' : '',
+  };
+}
+
+/** 画面の「キャンセルする」ボタンから呼ばれる。予定とZoomを消し、お客様と自分にメールを送る */
+function cancelBooking(token) {
+  token = String(token || '');
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) {
+    throw new Error('ただいま混み合っています。少し時間をおいて再度お試しください。');
+  }
+  try {
+    const ev = findBookingByToken_(token);
+    const status = checkCancelable_(ev);
+    if (status === 'gone') throw new Error('このご予約はすでにキャンセルされているか、見つかりませんでした。');
+    if (status === 'closed') throw new Error('キャンセルの受付期限を過ぎています。お手数ですが、予約確認メールにご返信ください。');
+    if (status !== 'ok') throw new Error('リンクからのキャンセルは受け付けていません。予約確認メールにご返信ください。');
+
+    const when = formatRangeLabel_(ev.getStartTime(), ev.getEndTime());
+    const name = ev.getTag('customerName') || '';
+    const email = ev.getTag('customerEmail');
+    const zoomId = ev.getTag('zoomMeetingId');
+
+    ev.deleteEvent();
+    if (zoomId) deleteZoomMeeting_(zoomId);
+    PropertiesService.getScriptProperties().deleteProperty(CANCEL_PROP_PREFIX + token);
+
+    const ownerEmail = CONFIG.OWNER_NOTIFY_EMAIL || Session.getEffectiveUser().getEmail();
+    try {
+      if (email) {
+        MailApp.sendEmail({
+          to: email,
+          replyTo: ownerEmail,
+          name: CONFIG.OWNER_NAME,
+          subject: `【キャンセル受付】個別相談 ${when}`,
+          body: [
+            `${name} 様`,
+            '',
+            '以下のご予約のキャンセルを承りました。',
+            '',
+            `日時：${when}`,
+            '',
+            'またご都合のよいときに、いつでもご予約ください。',
+            '別の日程をご希望の場合は、このメールにご返信いただいても大丈夫です。',
+            '',
+            signature_(),
+          ].join('\n'),
+        });
+      }
+      MailApp.sendEmail({
+        to: ownerEmail,
+        subject: `【キャンセル】${when} ${name}様`,
+        body: [
+          'お客様がキャンセル用リンクから予約を取り消しました。',
+          'カレンダーの予定とZoom会議は自動で削除済みです。',
+          '',
+          `日時：${when}`,
+          `お名前：${name}`,
+          `メール：${email || '不明'}`,
+        ].join('\n'),
+      });
+    } catch (e) {
+      console.error('キャンセルメール送信失敗: ' + e); // 取り消し自体は完了しているので画面には成功を返す
+    }
+    return { when: when };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 終わった予約のキャンセル用合言葉を片付ける（sendReminders から1日1回呼ばれる） */
+function cleanupCancelTokens_() {
+  const props = PropertiesService.getScriptProperties();
+  const cal = getCalendar_(CONFIG.BOOKING_CALENDAR_ID);
+  const now = Date.now();
+  Object.keys(props.getProperties())
+    .filter(k => k.indexOf(CANCEL_PROP_PREFIX) === 0)
+    .forEach(k => {
+      const ev = cal.getEventById(props.getProperty(k));
+      if (!ev || ev.getEndTime().getTime() < now) props.deleteProperty(k);
+    });
 }
 
 /** 最初に一度だけ実行：sendReminders を1時間ごとに自動実行する設定を作る（何度実行しても1つだけ） */
