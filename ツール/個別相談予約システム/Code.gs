@@ -59,6 +59,15 @@ const CONFIG = {
     'Gift Your Life株式会社',
     'ファイナンシャルプランナー　小野 健汰',
   ],
+  // お客様へのメールの書き出し（「◯◯様」の次の行）
+  MAIL_INTRO: 'Gift Your Life株式会社の小野です。',
+  // 確認メール・リマインドメールの「あるとスムーズなもの」（1行ずつ。メモは最後に自動で入る）
+  BRING_ITEMS: [
+    'ご加入中の保険証券',
+    'ねんきん定期便',
+    '収入がわかるもの（源泉徴収票など）',
+    '住宅ローンの返済予定表（ローンがある方）',
+  ],
   OWNER_NOTIFY_EMAIL: '', // 空なら、このスクリプトのオーナー（自分）に通知
   EVENT_TITLE_PREFIX: '【個別相談】',
   // Web予約はオンラインのみ。対面の予定は自分でカレンダーに直接入れる運用
@@ -312,8 +321,94 @@ function signature_() {
 /** キャンセルの案内文（リンクが作れないときは返信での案内） */
 function cancelGuide_(url) {
   return url
-    ? `ご都合が悪くなった場合は、下のリンクからキャンセルできます。\n${url}\n日程の変更をご希望の場合は、このメールにご返信ください。`
-    : '日程の変更・キャンセルは、このメールにご返信ください。';
+    ? `ご都合が悪くなったときは、下のリンクからキャンセルできます。\n${url}\n日程を変えたいときは、このメールにそのままご返信ください。`
+    : 'キャンセルや日程の変更は、このメールにそのままご返信ください。';
+}
+
+/** 参加方法のブロック（Zoomあり／オンラインだがURL未発行／対面） */
+function joinGuide_(method, zoom) {
+  if (zoom) {
+    return [
+      'お時間になりましたら、下のZoomからご参加ください。',
+      '',
+      buildZoomText_(zoom),
+      '',
+      '開始5分前から入室できます。Zoomアプリを先に入れておくとスムーズです。',
+      'お顔を出さず、音声だけでのご参加でも大丈夫です。',
+    ].join('\n');
+  }
+  if (String(method).indexOf('オンライン') !== -1) {
+    return '参加用のURLは、前日までにあらためてお送りします。\nお顔を出さず、音声だけでのご参加でも大丈夫です。';
+  }
+  return '場所などの詳しいご案内は、前日までにあらためてお送りします。';
+}
+
+/** 「あるとスムーズなもの」のブロック */
+function bringGuide_() {
+  return [
+    ...(CONFIG.BRING_ITEMS || []).map(s => `・${s}`),
+    '・メモをとれるもの',
+    '',
+    '書類がそろわなくても大丈夫です。お手元にあるものだけで、お気軽にご参加ください。',
+  ].join('\n');
+}
+
+function buildConfirmBody_(d, when, zoom, cancelUrl) {
+  return [
+    `${d.name} 様`,
+    '',
+    CONFIG.MAIL_INTRO,
+    'このたびは個別相談にお申し込みいただき、ありがとうございます。',
+    '以下の内容でご予約をお受けしました。',
+    '',
+    '■ ご予約内容',
+    `日時：${when}`,
+    `相談方法：${d.method}${zoom ? '（Zoom）' : ''}`,
+    `ご相談内容：${d.topics.join('、') || '当日お聞きします'}`,
+    '',
+    '■ 参加方法',
+    joinGuide_(d.method, zoom),
+    '',
+    `■ 当日の流れ（${CONFIG.SLOT_MINUTES}分）`,
+    'はじめに、今の状況や気になっていることをゆっくりお聞きします。',
+    'そのうえで、これからのお金のことを一緒に整理していきます。',
+    '商品を無理におすすめすることはありませんので、安心してお話しください。',
+    '',
+    '■ あるとスムーズなもの',
+    bringGuide_(),
+    '',
+    '■ キャンセル・日程の変更',
+    cancelGuide_(cancelUrl),
+    '',
+    'お話しできるのを楽しみにしています。',
+    '',
+    signature_(),
+  ].join('\n');
+}
+
+function buildReminderBody_(name, when, method, zoom, cancelUrl) {
+  return [
+    `${name || ''} 様`,
+    '',
+    CONFIG.MAIL_INTRO,
+    'ご予約いただいている個別相談が近づいてきましたので、ご案内をお送りします。',
+    '',
+    '■ 日時',
+    when,
+    '',
+    '■ 参加方法',
+    joinGuide_(method || 'オンライン', zoom),
+    '',
+    '■ あるとスムーズなもの',
+    bringGuide_(),
+    '',
+    '■ キャンセル・日程の変更',
+    cancelGuide_(cancelUrl),
+    '',
+    '当日、お話しできるのを楽しみにしています。',
+    '',
+    signature_(),
+  ].join('\n');
 }
 
 function sendMails_(d, when, zoom, zoomError, cancelUrl) {
@@ -324,28 +419,7 @@ function sendMails_(d, when, zoom, zoomError, cancelUrl) {
     replyTo: ownerEmail,
     name: CONFIG.OWNER_NAME,
     subject: `【ご予約確定】個別相談 ${when}`,
-    body: [
-      `${d.name} 様`,
-      '',
-      'このたびは個別相談のご予約をいただき、ありがとうございます。',
-      '以下の内容で承りました。',
-      '',
-      `日時：${when}`,
-      `相談方法：${d.method}`,
-      `ご相談内容：${d.topics.join('、') || '未選択'}`,
-      '',
-      zoom
-        ? `当日は以下のZoomからご参加ください。\n\n${buildZoomText_(zoom)}\n\n開始5分前からご入室いただけます。Zoomアプリを事前に入れておくとスムーズです。`
-        : d.method.indexOf('オンライン') !== -1
-          ? '接続用URLは前日までに改めてご連絡いたします。'
-          : '詳細は前日までに改めてご連絡いたします。',
-      '',
-      cancelGuide_(cancelUrl),
-      '',
-      '当日お会いできることを楽しみにしております。',
-      '',
-      signature_(),
-    ].join('\n'),
+    body: buildConfirmBody_(d, when, zoom, cancelUrl),
   });
 
   MailApp.sendEmail({
@@ -398,27 +472,9 @@ function sendReminders() {
         replyTo: ownerEmail,
         name: CONFIG.OWNER_NAME,
         subject: `【リマインド】個別相談 ${when}`,
-        body: [
-          `${ev.getTag('customerName') || ''} 様`,
-          '',
-          'ご予約いただいている個別相談のご案内です。',
-          'お会いできることを楽しみにしております。',
-          '',
-          `日時：${when}`,
-          `相談方法：${ev.getTag('method') || 'オンライン'}`,
-          '',
-          zoom
-            ? `当日は以下のZoomからご参加ください。\n\n${buildZoomText_(zoom)}\n\n開始5分前からご入室いただけます。\nZoomアプリを入れていない場合は、事前にインストールしておくとスムーズです。`
-            : '接続方法は別途ご連絡しているご案内をご確認ください。',
-          '',
-          '【当日あるとスムーズなもの】',
-          '・現在ご加入中の保険証券（お手元にあれば）',
-          '・メモをとれるもの',
-          '',
-          cancelGuide_(ev.getTag('cancelToken') && CONFIG.CANCEL_ENABLED ? cancelUrl_(ev.getTag('cancelToken')) : ''),
-          '',
-          signature_(),
-        ].join('\n'),
+        body: buildReminderBody_(
+          ev.getTag('customerName'), when, ev.getTag('method'), zoom,
+          ev.getTag('cancelToken') && CONFIG.CANCEL_ENABLED ? cancelUrl_(ev.getTag('cancelToken')) : ''),
       });
       ev.setTag('reminded', new Date().toISOString());
     } catch (e) {
@@ -507,12 +563,13 @@ function cancelBooking(token) {
           body: [
             `${name} 様`,
             '',
-            '以下のご予約のキャンセルを承りました。',
+            CONFIG.MAIL_INTRO,
+            '以下のご予約のキャンセルをお受けしました。',
             '',
             `日時：${when}`,
             '',
             'またご都合のよいときに、いつでもご予約ください。',
-            '別の日程をご希望の場合は、このメールにご返信いただいても大丈夫です。',
+            '別の日程をご希望のときは、このメールにそのままご返信いただいても大丈夫です。',
             '',
             signature_(),
           ].join('\n'),
