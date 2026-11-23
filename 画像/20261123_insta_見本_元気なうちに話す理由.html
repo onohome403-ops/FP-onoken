@@ -1,0 +1,135 @@
+<!doctype html><meta charset="utf-8"><style>
+/* ===== 画像スキル 共通の部品（全部の型で使う） =====
+   色・字・角の丸みは、下の :root を my_design.md の値で上書きする。
+   HTMLを作るときは、このファイルの中身を <style> にそのまま貼る（1枚で完結させる）。
+   画像にする中身は、必ず <div class="gazou"> の中に入れる。 */
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800;900&family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@500;700;900&family=Noto+Serif+JP:wght@600;700;900&display=swap');
+
+:root{
+  /* 色（見本の仮の色。my_design.md の色で置き換える） */
+  --bg:#FAF7F2;        /* 背景 */
+  --card:#FFFFFF;      /* カードの地 */
+  --ink:#2E3440;       /* 文字（真っ黒にしない） */
+  --ink2:#646B78;      /* 補足の文字 */
+  --accent:#D9653B;    /* メインの色（強調・帯・番号） */
+  --accent2:#5B8DB8;   /* サブの色（矢印・小さな点） */
+  --accentbg:#FBE3D6;  /* メインの色のうすい版（マーカー・タグの地） */
+  --line:#E7E0D6;      /* 線 */
+  --dot:rgba(46,52,64,.07); /* 背景のドット（いらなければ transparent） */
+  --shadow:rgba(46,52,64,.08);
+  --on-accent:#FFFFFF; /* メインの色の上に置く文字の色（メインがうすい色なら --ink にする） */
+
+  /* 字と形（雰囲気で変える。assets/iro_to_katachi.md を見る） */
+  --font-hd:"M PLUS Rounded 1c","Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --font-body:"Zen Maru Gothic","M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --hd-weight:900;
+  --radius:28px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+/* 画像1枚＝ .gazou の箱1つ。大きさは型ごとに width / height を決める */
+.gazou{
+  font-family:var(--font-body); font-weight:500; color:var(--ink);
+  background-color:var(--bg);
+  background-image:radial-gradient(var(--dot) 1.7px, transparent 1.7px);
+  background-size:30px 30px;
+  display:flex; flex-direction:column; position:relative; overflow:hidden;
+  font-feature-settings:"palt"; line-height:1.5; letter-spacing:.02em;
+}
+.hd{font-family:var(--font-hd); font-weight:var(--hd-weight)}
+
+/* 小さな見出し札（英語は使わない） */
+.tag{display:inline-flex; align-items:center; gap:10px; align-self:flex-start;
+  background:var(--accentbg); color:var(--ink); border-radius:999px;
+  padding:8px 24px 8px 18px; font-size:26px; font-weight:700}
+.tag i{width:14px; height:14px; border-radius:50%; background:var(--accent); display:inline-block}
+
+/* 大見出し */
+h1{font-size:68px; line-height:1.3; letter-spacing:.01em}
+h1 .em{color:var(--accent)}
+h1 .mk{background:linear-gradient(transparent 60%, var(--accentbg) 60%); padding:0 4px}
+.lead{font-size:30px; color:var(--ink2); font-weight:700}
+
+/* カード */
+.card{background:var(--card); border:2px solid var(--line); border-radius:var(--radius);
+  padding:26px 32px; box-shadow:0 10px 26px var(--shadow)}
+.num{width:76px; height:76px; border-radius:50%; background:var(--accent); color:var(--on-accent);
+  flex:none; display:flex; align-items:center; justify-content:center; font-size:36px}
+.ic{width:84px; height:84px; border-radius:50%; background:var(--accentbg); color:var(--accent);
+  flex:none; display:flex; align-items:center; justify-content:center}
+.ic svg{width:46px; height:46px}
+.ttl{font-size:34px; font-weight:900; line-height:1.35}
+.sub{font-size:27px; color:var(--ink2); margin-top:4px}
+
+/* 札（カードの頭に付ける小さなラベル） */
+.lbl{display:inline-block; background:var(--accentbg); color:var(--ink); border-radius:999px;
+  padding:2px 18px; font-size:24px; font-weight:900; margin-bottom:6px}
+
+/* ふきだし（寄りそう一言） */
+.bubble{position:relative; background:var(--card); border:2.5px solid var(--accent); border-radius:var(--radius);
+  padding:24px 30px; font-size:28px; line-height:1.5}
+.bubble::before{content:""; position:absolute; left:64px; top:-19px; width:30px; height:30px; background:var(--card);
+  border-left:2.5px solid var(--accent); border-top:2.5px solid var(--accent); transform:rotate(45deg)}
+
+/* 帯（1枚の結論。1枚に1つまで） */
+.band{background:var(--accent); color:var(--on-accent); border-radius:calc(var(--radius) * .8);
+  padding:24px 32px; font-size:32px; text-align:center; box-shadow:0 10px 26px var(--shadow)}
+
+/* 下の名前欄 */
+.footer{margin-top:auto; padding-top:22px; display:flex; justify-content:space-between; align-items:center;
+  font-size:26px; color:var(--ink2); font-weight:700}
+.who{display:flex; align-items:center; gap:14px}
+.who .av{width:48px; height:48px; border-radius:50%; background:var(--accent); color:var(--on-accent);
+  display:flex; align-items:center; justify-content:center; font-size:24px}
+.who .av svg{width:28px; height:28px}
+.note{font-size:23px; color:var(--ink2)}
+
+/* 矢印 */
+.arrow{display:flex; justify-content:center; color:var(--accent2)}
+.arrow svg{width:40px; height:40px}
+:root{
+  --bg:#F7F1E8; --card:#FFFFFF; --ink:#5C3F2B; --ink2:#7A604D;
+  --accent:#E8752F; --accent2:#8B6447; --accentbg:#FDE8D9;
+  --line:#E8DCCB; --dot:transparent; --shadow:rgba(92,63,43,.08);
+  --on-accent:#FFFFFF;
+  --font-hd:"M PLUS Rounded 1c","Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --font-body:"Zen Maru Gothic","M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --hd-weight:800; --radius:22px;
+}
+body{margin:0}
+.gazou{width:1080px;height:1350px; padding:72px 72px 54px}
+.hero{position:relative; display:flex; flex-direction:column; gap:18px}
+.ill{position:absolute; right:0; top:0; width:170px}
+.flow{display:flex; flex-direction:column; gap:10px; margin-top:52px}
+.row{display:flex; gap:26px; align-items:center; padding:26px 34px; min-height:216px}
+.row .num{width:64px; height:64px; font-size:30px}
+.row .ttl{font-size:34px}
+.row .ttl .em{color:var(--accent)}
+.row.goal{border:3px solid var(--accent)}
+.arrow{height:30px; align-items:center}
+.arrow svg{width:34px; height:34px}
+</style>
+<div class="gazou">
+<div class="hero">
+  <span class="tag"><i></i>親の介護とお金</span>
+  <h1 class="hd">親の介護とお金、<br><span class="mk">元気なうちに</span>話す理由</h1>
+  <p class="lead">親が望む暮らしを、家族で準備するために</p>
+  <svg class="ill" viewBox="0 0 200 180" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 86 100 22l78 64" />
+    <path d="M42 72v86h116V72" fill="var(--accentbg)"/>
+    <path d="M84 158v-44h32v44"/>
+    <path d="M100 66c-6-9-19-4-18 6 1 8 18 18 18 18s17-10 18-18c1-10-12-15-18-6z" fill="var(--accent)"/>
+  </svg>
+</div>
+<div class="flow">
+  <div class="card row"><div class="num hd">1</div><div><span class="lbl">でも実際は</span><div class="ttl">倒れてから、施設とお金を探し始める家族が多い</div></div></div>
+  <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+  <div class="card row"><div class="num hd">2</div><div><span class="lbl">なぜかというと</span><div class="ttl">親のお金の話は、子どもから切り出しにくい</div></div></div>
+  <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+  <div class="card row goal"><div class="num hd">3</div><div><span class="lbl">だから、こうする</span><div class="ttl">まずは<span class="em">「どこで暮らしたいか」</span>から聞いてみる</div></div></div>
+</div>
+<div class="footer">
+  <div class="who"><div class="av hd">お</div>おのけん｜宮城の介護とお金の相談室</div>
+  <div class="note">続きは本文で</div>
+</div>
+</div>
