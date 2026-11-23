@@ -1,0 +1,124 @@
+<!doctype html><meta charset="utf-8"><style>
+/* ===== 画像スキル 共通の部品（全部の型で使う） =====
+   色・字・角の丸みは、下の :root を my_design.md の値で上書きする。
+   HTMLを作るときは、このファイルの中身を <style> にそのまま貼る（1枚で完結させる）。
+   画像にする中身は、必ず <div class="gazou"> の中に入れる。 */
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800;900&family=Zen+Maru+Gothic:wght@500;700;900&family=Noto+Sans+JP:wght@500;700;900&family=Noto+Serif+JP:wght@600;700;900&display=swap');
+
+:root{
+  /* 色（見本の仮の色。my_design.md の色で置き換える） */
+  --bg:#FAF7F2;        /* 背景 */
+  --card:#FFFFFF;      /* カードの地 */
+  --ink:#2E3440;       /* 文字（真っ黒にしない） */
+  --ink2:#646B78;      /* 補足の文字 */
+  --accent:#D9653B;    /* メインの色（強調・帯・番号） */
+  --accent2:#5B8DB8;   /* サブの色（矢印・小さな点） */
+  --accentbg:#FBE3D6;  /* メインの色のうすい版（マーカー・タグの地） */
+  --line:#E7E0D6;      /* 線 */
+  --dot:rgba(46,52,64,.07); /* 背景のドット（いらなければ transparent） */
+  --shadow:rgba(46,52,64,.08);
+  --on-accent:#FFFFFF; /* メインの色の上に置く文字の色（メインがうすい色なら --ink にする） */
+
+  /* 字と形（雰囲気で変える。assets/iro_to_katachi.md を見る） */
+  --font-hd:"M PLUS Rounded 1c","Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --font-body:"Zen Maru Gothic","M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --hd-weight:900;
+  --radius:28px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+/* 画像1枚＝ .gazou の箱1つ。大きさは型ごとに width / height を決める */
+.gazou{
+  font-family:var(--font-body); font-weight:500; color:var(--ink);
+  background-color:var(--bg);
+  background-image:radial-gradient(var(--dot) 1.7px, transparent 1.7px);
+  background-size:30px 30px;
+  display:flex; flex-direction:column; position:relative; overflow:hidden;
+  font-feature-settings:"palt"; line-height:1.5; letter-spacing:.02em;
+}
+.hd{font-family:var(--font-hd); font-weight:var(--hd-weight)}
+
+/* 小さな見出し札（英語は使わない） */
+.tag{display:inline-flex; align-items:center; gap:10px; align-self:flex-start;
+  background:var(--accentbg); color:var(--ink); border-radius:999px;
+  padding:8px 24px 8px 18px; font-size:26px; font-weight:700}
+.tag i{width:14px; height:14px; border-radius:50%; background:var(--accent); display:inline-block}
+
+/* 大見出し */
+h1{font-size:68px; line-height:1.3; letter-spacing:.01em}
+h1 .em{color:var(--accent)}
+h1 .mk{background:linear-gradient(transparent 60%, var(--accentbg) 60%); padding:0 4px}
+.lead{font-size:30px; color:var(--ink2); font-weight:700}
+
+/* カード */
+.card{background:var(--card); border:2px solid var(--line); border-radius:var(--radius);
+  padding:26px 32px; box-shadow:0 10px 26px var(--shadow)}
+.num{width:76px; height:76px; border-radius:50%; background:var(--accent); color:var(--on-accent);
+  flex:none; display:flex; align-items:center; justify-content:center; font-size:36px}
+.ic{width:84px; height:84px; border-radius:50%; background:var(--accentbg); color:var(--accent);
+  flex:none; display:flex; align-items:center; justify-content:center}
+.ic svg{width:46px; height:46px}
+.ttl{font-size:34px; font-weight:900; line-height:1.35}
+.sub{font-size:27px; color:var(--ink2); margin-top:4px}
+
+/* 札（カードの頭に付ける小さなラベル） */
+.lbl{display:inline-block; background:var(--accentbg); color:var(--ink); border-radius:999px;
+  padding:2px 18px; font-size:24px; font-weight:900; margin-bottom:6px}
+
+/* ふきだし（寄りそう一言） */
+.bubble{position:relative; background:var(--card); border:2.5px solid var(--accent); border-radius:var(--radius);
+  padding:24px 30px; font-size:28px; line-height:1.5}
+.bubble::before{content:""; position:absolute; left:64px; top:-19px; width:30px; height:30px; background:var(--card);
+  border-left:2.5px solid var(--accent); border-top:2.5px solid var(--accent); transform:rotate(45deg)}
+
+/* 帯（1枚の結論。1枚に1つまで） */
+.band{background:var(--accent); color:var(--on-accent); border-radius:calc(var(--radius) * .8);
+  padding:24px 32px; font-size:32px; text-align:center; box-shadow:0 10px 26px var(--shadow)}
+
+/* 下の名前欄 */
+.footer{margin-top:auto; padding-top:22px; display:flex; justify-content:space-between; align-items:center;
+  font-size:26px; color:var(--ink2); font-weight:700}
+.who{display:flex; align-items:center; gap:14px}
+.who .av{width:48px; height:48px; border-radius:50%; background:var(--accent); color:var(--on-accent);
+  display:flex; align-items:center; justify-content:center; font-size:24px}
+.who .av svg{width:28px; height:28px}
+.note{font-size:23px; color:var(--ink2)}
+
+/* 矢印 */
+.arrow{display:flex; justify-content:center; color:var(--accent2)}
+.arrow svg{width:40px; height:40px}
+:root{
+  --bg:#F7F1E8; --card:#FFFFFF; --ink:#5C3F2B; --ink2:#7A604D;
+  --accent:#E8752F; --accent2:#8B6447; --accentbg:#FDE8D9;
+  --line:#E8DCCB; --dot:transparent; --shadow:rgba(92,63,43,.08);
+  --on-accent:#FFFFFF;
+  --font-hd:"M PLUS Rounded 1c","Zen Maru Gothic","Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --font-body:"Zen Maru Gothic","M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  --hd-weight:800; --radius:22px;
+}
+body{margin:0}
+.gazou{width:1080px;height:1080px; padding:80px 84px 60px}
+.box{flex:1; display:flex; flex-direction:column; justify-content:center; gap:30px}
+.bar{width:120px; height:12px; border-radius:6px; background:var(--accent)}
+.pre{font-size:34px; font-weight:700; color:var(--ink2)}
+.quote{font-size:80px; line-height:1.45}
+.quote .mk{background:linear-gradient(transparent 60%, var(--accentbg) 60%); padding:0 4px}
+.lead{font-size:32px}
+.ill{position:absolute; right:84px; top:80px; width:170px}
+</style>
+<div class="gazou">
+<span class="tag"><i></i>はじめまして</span>
+<svg class="ill" viewBox="0 0 200 170" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M30 24h140a16 16 0 0 1 16 16v66a16 16 0 0 1-16 16H84l-30 26v-26H30a16 16 0 0 1-16-16V40a16 16 0 0 1 16-16z" fill="var(--accentbg)"/>
+  <path d="M100 58c-6-9-19-4-18 6 1 8 18 18 18 18s17-10 18-18c1-10-12-15-18-6z" fill="var(--accent)"/>
+</svg>
+<div class="box">
+  <div class="bar"></div>
+  <p class="pre">介護の現場で、何度も聞いた言葉</p>
+  <p class="quote hd">「お金のこと、<br>もっと早く<br><span class="mk">知っていれば」</span></p>
+  <p class="lead">元看護師・ケアマネのFPが、<br>宮城の介護とお金をやさしく話します</p>
+</div>
+<div class="footer">
+  <div class="who"><div class="av hd">お</div>おのけん｜宮城の介護とお金の相談室</div>
+</div>
+</div>
