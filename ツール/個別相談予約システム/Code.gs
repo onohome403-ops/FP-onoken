@@ -56,8 +56,40 @@ const CONFIG = {
   // 終日予定は基本的にメモ扱い（予約を止めない）。タイトルにこれらを含む終日予定がある日だけ、丸ごと予約不可にする
   ALL_DAY_BLOCK_KEYWORDS: ['休み', '休業', '予約不可'],
 
+  // 予約の種類。予約ページのURLの最後に ?type=partner を付けると協業先用の画面になる（付けなければ consult）
+  // 枠の時間・長さ・締め切り・Zoomなどは共通。ここに書いた項目だけ種類ごとに変わる
+  BOOKING_TYPES: {
+    consult: {
+      LABEL: '個別相談',                       // メールの件名・通知に使う呼び名
+      TITLE: 'オンライン個別相談のご予約',       // 予約ページの見出し
+      LEAD: 'ご相談はオンライン（ビデオ通話）で行います。ご自宅から、スマホでもご参加いただけます。\nご都合のよい日時をお選びください。',
+      EVENT_TITLE_PREFIX: '【個別相談】',      // カレンダーの予定名の頭
+      FORM_HEADING: 'お客様情報',
+      ASK_COMPANY: false,                      // 会社名の入力欄を出すか（出すときは必須）
+      TOPICS_LABEL: 'ご相談になりたいこと（複数可）',
+      TOPICS: ['ライフプラン全般', '保険の見直し', '介護・認知症への備え', '老後資金・資産形成', '教育資金', 'その他'],
+      NOTE_LABEL: 'ご質問・ご要望など',
+      NOTE_PLACEHOLDER: '例）親の介護が始まりそうで、お金の準備について相談したい',
+      SHOW_CHARA: true,                        // ほっくまを出すか
+      MAIL: 'consult',                         // メール文面の種類（consult / partner）
+    },
+    partner: {
+      LABEL: '協業面談',
+      TITLE: 'お打ち合わせのご予約',
+      LEAD: 'オンライン（Zoom）でのお打ち合わせです。\nご都合のよい日時をお選びください。',
+      EVENT_TITLE_PREFIX: '【協業面談】',
+      FORM_HEADING: 'ご予約者の情報',
+      ASK_COMPANY: true,
+      TOPICS_LABEL: '',
+      TOPICS: [],                              // 空なら選択欄を出さない
+      NOTE_LABEL: '面談の目的・ご用件',
+      NOTE_PLACEHOLDER: '例）協業のご相談、サービスのご紹介 など',
+      SHOW_CHARA: true,
+      MAIL: 'partner',
+    },
+  },
+
   // 表示・メール用
-  TITLE: 'オンライン個別相談のご予約',
   OWNER_NAME: 'Gift Your Life株式会社 小野 健汰', // メールの差出人名
   // メールの最後に入れる署名（1行ずつ）
   SIGNATURE: [
@@ -74,11 +106,9 @@ const CONFIG = {
     '住宅ローンの返済予定表（ローンがある方）',
   ],
   OWNER_NOTIFY_EMAIL: '', // 空なら、このスクリプトのオーナー（自分）に通知
-  EVENT_TITLE_PREFIX: '【個別相談】',
   // Web予約はオンラインのみ。対面の予定は自分でカレンダーに直接入れる運用
   // （複数並べると、お客様が予約画面で選べるようになる）
   METHODS: ['オンライン'],
-  TOPICS: ['ライフプラン全般', '保険の見直し', '介護・認知症への備え', '老後資金・資産形成', '教育資金', 'その他'],
 
   TIME_ZONE: 'Asia/Tokyo',
 
@@ -108,7 +138,7 @@ function doGet(e) {
   const cancelToken = e && e.parameter && e.parameter.cancel;
   if (cancelToken) {
     const page = HtmlService.createTemplateFromFile('Cancel');
-    page.title = CONFIG.TITLE;
+    page.title = 'ご予約のキャンセル';
     page.token = String(cancelToken);
     page.info = getCancelInfo_(String(cancelToken));
     return page.evaluate()
@@ -117,21 +147,41 @@ function doGet(e) {
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
   }
 
+  const type = typeKey_(e && e.parameter && e.parameter.type);
+  const t = typeConf_(type);
   const tpl = HtmlService.createTemplateFromFile('Index');
   tpl.config = {
-    title: CONFIG.TITLE,
+    type: type,
+    title: t.TITLE,
+    lead: t.LEAD,
+    formHeading: t.FORM_HEADING,
+    askCompany: !!t.ASK_COMPANY,
+    topicsLabel: t.TOPICS_LABEL,
+    noteLabel: t.NOTE_LABEL,
+    notePlaceholder: t.NOTE_PLACEHOLDER,
+    showChara: t.SHOW_CHARA !== false,
     ownerName: CONFIG.OWNER_NAME,
     slotMinutes: CONFIG.SLOT_MINUTES,
     maxDaysAhead: CONFIG.MAX_DAYS_AHEAD,
     fewSlots: CONFIG.FEW_SLOTS_THRESHOLD,
     timeZone: CONFIG.TIME_ZONE,
     methods: CONFIG.METHODS,
-    topics: CONFIG.TOPICS,
+    topics: t.TOPICS || [],
   };
   return tpl.evaluate()
-    .setTitle(CONFIG.TITLE)
+    .setTitle(t.TITLE)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/** URLの ?type= を予約の種類に。知らない値や空なら consult */
+function typeKey_(raw) {
+  const k = String(raw || '').trim();
+  return Object.prototype.hasOwnProperty.call(CONFIG.BOOKING_TYPES, k) ? k : 'consult';
+}
+
+function typeConf_(type) {
+  return CONFIG.BOOKING_TYPES[typeKey_(type)];
 }
 
 /* ===================== 画面から呼ばれる関数 ===================== */
@@ -170,7 +220,8 @@ function bookSlot(form) {
       throw new Error('申し訳ありません。この枠は直前に埋まりました。別の枠をお選びください。');
     }
 
-    const title = `${CONFIG.EVENT_TITLE_PREFIX}${data.name}様（${data.method}）`;
+    const t = typeConf_(data.type);
+    const title = `${t.EVENT_TITLE_PREFIX}${data.company ? data.company + ' ' : ''}${data.name}様（${data.method}）`;
     const when = formatSlotLabel_(slot);
 
     // Zoomの発行に失敗しても予約自体は受け付け、URLは後から手動で送る
@@ -192,8 +243,10 @@ function bookSlot(form) {
         location: zoom ? zoom.joinUrl : '',
       });
       event.setTag('booking', 'web');
+      event.setTag('bookingType', data.type);
       // リマインドメール用にお客様情報とZoom情報を予定に保存
       event.setTag('customerName', data.name);
+      if (data.company) event.setTag('company', data.company);
       event.setTag('customerEmail', data.email);
       event.setTag('method', data.method);
       if (zoom) {
@@ -311,14 +364,17 @@ function getBusyIntervals_(start, end) {
 }
 
 function buildEventDescription_(d) {
+  const t = typeConf_(d.type);
   return [
+    `種類：${t.LABEL}`,
+    ...(d.company ? [`会社名：${d.company}`] : []),
     `お名前：${d.name}${d.kana ? `（${d.kana}）` : ''}`,
     `メール：${d.email}`,
     `電話：${d.phone}`,
-    `相談方法：${d.method}`,
-    `ご相談内容：${d.topics.join('、') || '未選択'}`,
+    `方法：${d.method}`,
+    ...((t.TOPICS || []).length ? [`ご相談内容：${d.topics.join('、') || '未選択'}`] : []),
     '',
-    '【ご質問・ご要望】',
+    `【${t.NOTE_LABEL}】`,
     d.note || 'なし',
     '',
     '— Web予約フォームより自動登録',
@@ -399,6 +455,69 @@ function buildConfirmBody_(d, when, zoom, cancelUrl) {
   ].join('\n');
 }
 
+/** 宛名（会社名があれば上の行に） */
+function greeting_(name, company) {
+  return [...(company ? [company] : []), `${name || ''} 様`].join('\n');
+}
+
+/** 協業先向けの参加方法（カメラオフの一言は付けない） */
+function partnerJoinGuide_(method, zoom) {
+  if (zoom) {
+    return ['下記のZoomからご参加ください。', '', buildZoomText_(zoom), '', '開始5分前から入室できます。'].join('\n');
+  }
+  return String(method).indexOf('オンライン') !== -1
+    ? '接続先のURLは、前日までにあらためてお送りします。'
+    : '場所などの詳しいご案内は、前日までにあらためてお送りします。';
+}
+
+function buildPartnerConfirmBody_(d, when, zoom, cancelUrl) {
+  return [
+    greeting_(d.name, d.company),
+    '',
+    CONFIG.MAIL_INTRO,
+    'このたびはお打ち合わせのお時間をいただき、ありがとうございます。',
+    '以下の内容で承りました。',
+    '',
+    '■ 日時',
+    `${when}（${CONFIG.SLOT_MINUTES}分）`,
+    '',
+    '■ ご用件',
+    d.note || '当日うかがいます',
+    '',
+    '■ 参加方法',
+    partnerJoinGuide_(d.method, zoom),
+    '',
+    '■ キャンセル・日程の変更',
+    cancelGuide_(cancelUrl),
+    '',
+    '当日はどうぞよろしくお願いいたします。',
+    '',
+    signature_(),
+  ].join('\n');
+}
+
+function buildPartnerReminderBody_(name, company, when, method, zoom, cancelUrl) {
+  return [
+    greeting_(name, company),
+    '',
+    CONFIG.MAIL_INTRO,
+    'お打ち合わせの日時が近づいてまいりましたので、ご案内をお送りします。',
+    '',
+    '■ 日時',
+    when,
+    '',
+    '■ 参加方法',
+    partnerJoinGuide_(method || 'オンライン', zoom),
+    '',
+    '■ キャンセル・日程の変更',
+    cancelGuide_(cancelUrl),
+    '',
+    '当日はどうぞよろしくお願いいたします。',
+    '',
+    signature_(),
+  ].join('\n');
+}
+
 function buildReminderBody_(name, when, method, zoom, cancelUrl) {
   return [
     `${name || ''} 様`,
@@ -426,18 +545,19 @@ function buildReminderBody_(name, when, method, zoom, cancelUrl) {
 
 function sendMails_(d, when, zoom, zoomError, cancelUrl) {
   const ownerEmail = CONFIG.OWNER_NOTIFY_EMAIL || Session.getEffectiveUser().getEmail();
+  const t = typeConf_(d.type);
 
   MailApp.sendEmail({
     to: d.email,
     replyTo: ownerEmail,
     name: CONFIG.OWNER_NAME,
-    subject: `【ご予約確定】個別相談 ${when}`,
-    body: buildConfirmBody_(d, when, zoom, cancelUrl),
+    subject: `【ご予約確定】${t.MAIL === 'partner' ? 'お打ち合わせ' : '個別相談'} ${when}`,
+    body: t.MAIL === 'partner' ? buildPartnerConfirmBody_(d, when, zoom, cancelUrl) : buildConfirmBody_(d, when, zoom, cancelUrl),
   });
 
   MailApp.sendEmail({
     to: ownerEmail,
-    subject: `【新規予約】${when} ${d.name}様（${d.method}）`,
+    subject: `【新規予約・${t.LABEL}】${when} ${d.company ? d.company + ' ' : ''}${d.name}様（${d.method}）`,
     body: [
       'Web予約フォームから新しい予約が入りました。',
       ...(zoomError ? ['', '※Zoomの自動発行に失敗しました。お客様にURLを手動でお送りください。', `（${zoomError}）`] : []),
@@ -479,15 +599,17 @@ function sendReminders() {
       ? { id: ev.getTag('zoomMeetingId'), joinUrl: ev.getTag('zoomJoinUrl'), password: ev.getTag('zoomPassword') }
       : null;
 
+    const t = typeConf_(ev.getTag('bookingType'));
+    const link = ev.getTag('cancelToken') && CONFIG.CANCEL_ENABLED ? cancelUrl_(ev.getTag('cancelToken')) : '';
     try {
       MailApp.sendEmail({
         to: email,
         replyTo: ownerEmail,
         name: CONFIG.OWNER_NAME,
-        subject: `【リマインド】個別相談 ${when}`,
-        body: buildReminderBody_(
-          ev.getTag('customerName'), when, ev.getTag('method'), zoom,
-          ev.getTag('cancelToken') && CONFIG.CANCEL_ENABLED ? cancelUrl_(ev.getTag('cancelToken')) : ''),
+        subject: `【リマインド】${t.MAIL === 'partner' ? 'お打ち合わせ' : '個別相談'} ${when}`,
+        body: t.MAIL === 'partner'
+          ? buildPartnerReminderBody_(ev.getTag('customerName'), ev.getTag('company'), when, ev.getTag('method'), zoom, link)
+          : buildReminderBody_(ev.getTag('customerName'), when, ev.getTag('method'), zoom, link),
       });
       ev.setTag('reminded', new Date().toISOString());
     } catch (e) {
@@ -558,8 +680,11 @@ function cancelBooking(token) {
 
     const when = formatRangeLabel_(ev.getStartTime(), ev.getEndTime());
     const name = ev.getTag('customerName') || '';
+    const company = ev.getTag('company') || '';
     const email = ev.getTag('customerEmail');
     const zoomId = ev.getTag('zoomMeetingId');
+    const t = typeConf_(ev.getTag('bookingType'));
+    const isPartner = t.MAIL === 'partner';
 
     ev.deleteEvent();
     if (zoomId) deleteZoomMeeting_(zoomId);
@@ -572,17 +697,19 @@ function cancelBooking(token) {
           to: email,
           replyTo: ownerEmail,
           name: CONFIG.OWNER_NAME,
-          subject: `【キャンセル受付】個別相談 ${when}`,
+          subject: `【キャンセル受付】${isPartner ? 'お打ち合わせ' : '個別相談'} ${when}`,
           body: [
-            `${name} 様`,
+            greeting_(name, company),
             '',
             CONFIG.MAIL_INTRO,
-            '以下のご予約のキャンセルをお受けしました。',
+            isPartner ? '以下のお打ち合わせのキャンセルを承りました。' : '以下のご予約のキャンセルをお受けしました。',
             '',
             `日時：${when}`,
             '',
-            'またご都合のよいときに、いつでもご予約ください。',
-            '別の日程をご希望のときは、このメールにそのままご返信いただいても大丈夫です。',
+            ...(isPartner
+              ? ['別の日程をご希望の場合は、このメールにご返信ください。']
+              : ['またご都合のよいときに、いつでもご予約ください。',
+                '別の日程をご希望のときは、このメールにそのままご返信いただいても大丈夫です。']),
             '',
             signature_(),
           ].join('\n'),
@@ -590,12 +717,14 @@ function cancelBooking(token) {
       }
       MailApp.sendEmail({
         to: ownerEmail,
-        subject: `【キャンセル】${when} ${name}様`,
+        subject: `【キャンセル・${t.LABEL}】${when} ${company ? company + ' ' : ''}${name}様`,
         body: [
-          'お客様がキャンセル用リンクから予約を取り消しました。',
+          'キャンセル用リンクから予約が取り消されました。',
           'カレンダーの予定とZoom会議は自動で削除済みです。',
           '',
+          `種類：${t.LABEL}`,
           `日時：${when}`,
+          ...(company ? [`会社名：${company}`] : []),
           `お名前：${name}`,
           `メール：${email || '不明'}`,
         ].join('\n'),
@@ -725,17 +854,22 @@ function buildZoomText_(z) {
 
 function validateForm_(f) {
   const s = v => String(v == null ? '' : v).trim();
+  const type = typeKey_(f && f.type);
+  const t = typeConf_(type);
   const d = {
+    type: type,
     start: s(f && f.start),
+    company: t.ASK_COMPANY ? s(f && f.company).slice(0, 80) : '',
     name: s(f && f.name).slice(0, 50),
     kana: s(f && f.kana).slice(0, 50),
     email: s(f && f.email).slice(0, 100),
     phone: s(f && f.phone).slice(0, 20),
     method: s(f && f.method),
-    topics: (Array.isArray(f && f.topics) ? f.topics : []).map(s).filter(t => CONFIG.TOPICS.indexOf(t) !== -1),
+    topics: (Array.isArray(f && f.topics) ? f.topics : []).map(s).filter(x => (t.TOPICS || []).indexOf(x) !== -1),
     note: s(f && f.note).slice(0, 1000),
   };
   if (!d.start || isNaN(new Date(d.start).getTime())) throw new Error('日時を選択してください。');
+  if (t.ASK_COMPANY && !d.company) throw new Error('会社名・団体名を入力してください。');
   if (!d.name) throw new Error('お名前を入力してください。');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) throw new Error('メールアドレスの形式をご確認ください。');
   if (!/^[0-9０-９\-－+() ]{10,20}$/.test(d.phone)) throw new Error('電話番号をご確認ください。');
