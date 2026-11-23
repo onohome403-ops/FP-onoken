@@ -777,6 +777,7 @@ function testListSlots() {
 
 /** Zoom連携の確認：テスト会議を作成してURLをログに出し、すぐ削除する */
 function testZoom() {
+  CacheService.getScriptCache().remove('zoomToken'); // Zoomの権限を変えた直後でも、新しい認証で確かめる
   const start = new Date(Date.now() + 7 * 24 * 3600 * 1000);
   const z = createZoomMeeting_('【テスト】予約システム接続確認', start, CONFIG.SLOT_MINUTES);
   Logger.log('Zoom連携OK\n' + buildZoomText_(z));
