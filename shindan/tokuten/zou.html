@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>親の備えと夫婦の老後資金を分けて考えるシート</title>
+<meta name="robots" content="noindex">
+<meta property="og:title" content="親の備えと夫婦の老後資金を分けて考えるシート">
+<meta property="og:description" content="🐘 段取りゾウタイプの方向けの整理シートです。印刷して書き込めます。">
+<style>
+:root{--paper:#F5FBF8;--white:#fff;--soft:#E3F3EE;--line:#C4E0D8;--navy:#0F4A40;--ink:#17332D;--sub:#44605A;--green:#008E78;--gold:#F07A1C;--gold-l:#FFE27A}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;font-weight:500;font-size:18px;line-height:1.8;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:28px 16px 60px}
+header{text-align:center;margin-bottom:18px}
+.who{display:inline-block;font-size:16px;font-weight:700;color:var(--sub);background:var(--soft);border-radius:999px;padding:6px 16px}
+.pic{display:block;width:132px;height:132px;margin:16px auto 4px}
+.kind{font-size:16px;font-weight:700;color:var(--gold);letter-spacing:.1em;margin:4px 0 0}
+h1{font-size:26px;line-height:1.45;color:var(--navy);margin:6px 0 10px;font-weight:900}
+.lead{font-size:18px;color:var(--sub);margin:0;text-align:left}
+.card{background:var(--white);border:2px solid var(--line);border-radius:18px;padding:22px 20px;margin:16px 0}
+h2{font-size:21px;line-height:1.45;color:var(--navy);font-weight:900;margin:0 0 12px;display:flex;align-items:center;gap:10px}
+h2 .no{flex:none;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;font-size:17px}
+.desc{font-size:17px;color:var(--sub);margin:-4px 0 12px}
+ul.chk{list-style:none;margin:0;padding:0}
+ul.chk li{margin:0;border-top:1px solid var(--soft)}
+ul.chk li:first-child{border-top:0}
+ul.chk label{display:flex;gap:12px;align-items:flex-start;padding:10px 0;cursor:pointer;line-height:1.6}
+ul.chk input{flex:none;width:24px;height:24px;margin:3px 0 0;accent-color:var(--green)}
+.tip{background:#FFF7D6;border:2px solid var(--gold-l);border-radius:14px;padding:14px 16px;font-size:17px;margin:16px 0 0}
+.tip b{color:var(--navy)}
+.warn{background:#FFF1E6;border:2px solid #F7B98A;border-radius:14px;padding:14px 16px;font-size:17px}
+.warn b{color:#B2510B}
+.memo{margin-top:10px}
+.memo .ln{height:38px;border-bottom:1.5px dashed var(--line)}
+.memo .cap{font-size:15px;color:var(--sub);margin:0}
+table{width:100%;border-collapse:collapse;font-size:16px;line-height:1.55}
+th,td{border:1.5px solid var(--line);padding:9px 10px;vertical-align:top;text-align:left}
+th{background:var(--soft);color:var(--navy);font-weight:900}
+td.k{font-weight:700;color:var(--navy);width:38%}
+td.k small{display:block;font-weight:500;color:var(--sub);font-size:14px}
+td.w{height:56px}
+td.d{width:20%}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.col{border:2px solid var(--line);border-radius:14px;padding:12px 12px 6px;background:#fff}
+.col h3{margin:0 0 6px;font-size:18px;font-weight:900;color:#fff;background:var(--green);border-radius:8px;padding:4px 10px;text-align:center}
+.col.r h3{background:var(--gold)}
+.row-t{font-size:16px;font-weight:900;color:var(--navy);margin:16px 0 8px;padding-left:10px;border-left:5px solid var(--green)}
+.col p{margin:0 0 6px;font-size:16px;line-height:1.6}
+.col .memo .ln{height:32px}
+.box3{display:grid;gap:10px}
+.bx{border:2px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff}
+.bx b{display:block;color:var(--navy);font-size:18px;font-weight:900}
+.bx span{display:block;font-size:16px;color:var(--sub)}
+.bx.b1{border-color:#9ED9CB;background:#F2FBF8}
+.bx.b2{border-color:var(--gold-l);background:#FFFBEA}
+.bx.b3{border-color:#F7C9A3;background:#FFF5EC}
+.term{border:2px solid var(--line);border-radius:14px;padding:10px 14px 4px;margin:10px 0}
+.term b{color:var(--navy);font-weight:900}
+.term .ex{font-size:15px;color:var(--sub);margin-left:6px}
+.actions{display:grid;gap:10px;margin-top:8px}
+.btn{display:block;text-align:center;font:inherit;font-size:19px;font-weight:900;color:#fff;background:#06C755;border:0;border-radius:14px;padding:16px;text-decoration:none;line-height:1.4;cursor:pointer}
+.btn.print{background:var(--green)}
+.btn:hover{filter:brightness(1.05)}
+.note{font-size:16px;color:var(--sub);text-align:center;margin:4px 0 0}
+.dis{font-size:15px;color:var(--sub);margin:18px 0 0;padding-top:14px;border-top:1px solid var(--line)}
+footer{text-align:center;font-size:15px;color:var(--sub);margin-top:26px}
+@media (max-width:420px){
+  h1{font-size:23px}
+  .cols{grid-template-columns:1fr}
+  table{font-size:15px}
+  th,td{padding:8px 7px}
+}
+@media print{
+  @page{size:A4;margin:12mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff;font-size:11.5pt;line-height:1.6}
+  .wrap{max-width:none;padding:0}
+  .no-print{display:none!important}
+  .pic{width:68px;height:68px;margin:6px auto 0}
+  h1{font-size:18pt;margin:4px 0 6px}
+  .card{padding:10px 14px;margin:8px 0;border-width:1.5px}
+  ul.chk li,tr,.col,.term,.bx,.tip,.warn{break-inside:avoid;page-break-inside:avoid}
+  h2,.row-t,.desc,thead{break-after:avoid;page-break-after:avoid}
+  .who{font-size:9.5pt;padding:3px 12px}
+  .kind{font-size:10pt}
+  .lead,.desc,.tip,.warn{font-size:10.5pt}
+  .row-t{margin:8px 0 5px;font-size:11pt}
+  .col{padding:8px 10px 4px}
+  .col h3{font-size:11pt;padding:2px 8px}
+  .col p{font-size:10pt}
+  .col .memo .ln{height:22px}
+  th,td{padding:5px 8px}
+  td.k small{font-size:8.5pt}
+  .term{padding:6px 12px 2px;margin:6px 0}
+  .bx{padding:8px 12px}
+  .bx b{font-size:11pt}.bx span{font-size:10pt}
+  .dis,footer{font-size:9pt;margin-top:8px}
+  h2{font-size:13.5pt;margin-bottom:6px}
+  h2 .no{width:24px;height:24px;font-size:11pt}
+  ul.chk label{padding:5px 0}
+  ul.chk input{width:16px;height:16px}
+  .cols{grid-template-columns:1fr 1fr}
+  table{font-size:10.5pt}
+  td.w{height:30px}
+  .memo .ln{height:28px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="who">小野 健汰｜宮城で正直金融</span>
+    <svg class="pic" viewBox="0 0 120 120" role="img" aria-label="ゾウのイラスト">
+<circle cx="60" cy="60" r="58" fill="#E3F3EE"/>
+<ellipse cx="62" cy="80" rx="34" ry="22" fill="#7FB3A6"/>
+<rect x="36" y="86" width="12" height="20" rx="5" fill="#7FB3A6"/>
+<rect x="52" y="88" width="12" height="18" rx="5" fill="#6FA698"/>
+<rect x="70" y="88" width="12" height="18" rx="5" fill="#7FB3A6"/>
+<rect x="84" y="86" width="12" height="20" rx="5" fill="#6FA698"/>
+<path d="M95 74 q10 2 8 12" stroke="#5E978A" stroke-width="3" fill="none" stroke-linecap="round"/>
+<circle cx="44" cy="56" r="24" fill="#8FC2B5"/>
+<path d="M50 40 C66 30 84 40 82 58 C80 74 64 78 54 70 Z" fill="#B9DDD3" stroke="#7FB3A6" stroke-width="3"/>
+<path d="M26 64 C22 78 20 90 28 96 C34 100 40 96 36 90 C32 86 32 78 36 70 Z" fill="#8FC2B5"/>
+<circle cx="38" cy="50" r="4" fill="#0F4A40"/><circle cx="39" cy="49" r="1.4" fill="#fff"/>
+<circle cx="33" cy="60" r="3.4" fill="#FFB98A" opacity=".85"/>
+<path d="M30 70 q6 6 14 2" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>
+<rect x="66" y="22" width="24" height="16" rx="3" fill="#FFE27A" stroke="#F07A1C" stroke-width="2.4" transform="rotate(10 78 30)"/>
+<path d="M70 28 h14 M70 33 h10" stroke="#F07A1C" stroke-width="2" transform="rotate(10 78 30)" stroke-linecap="round"/>
+</svg>
+    <p class="kind">🐘 段取りゾウタイプの方へ</p>
+    <h1>親の備えと夫婦の老後資金を分けて考えるシート</h1>
+    <p class="lead">「親のため」と「自分たちのため」を、左右に分けて書き出すシートです。分けて並べると、どちらかが後回しになっていないかが見えやすくなります。</p>
+  </header>
+<section class="card"><h2><span class="no">1</span>左右に分けて書き出す</h2><p class="desc">それぞれの文は考えるヒントです。その下の線に、わが家の場合を書いてみてください。</p><p class="row-t">お金の出どころ</p><div class="cols">
+<div class="col"><h3>親の備え</h3><p>親の年金・貯蓄が基本。足りない分をどうするかは、家族で話し合って決める。</p><div class="memo"><div class="ln"></div><div class="ln"></div></div></div>
+<div class="col r"><h3>夫婦の老後資金</h3><p>夫婦の収入・貯蓄・年金。親の分とは別の財布として考える。</p><div class="memo"><div class="ln"></div><div class="ln"></div></div></div></div>
+<p class="row-t">確認すること</p><div class="cols">
+<div class="col"><h3>親の備え</h3><p>親の年金と毎月の支出の目安／介護保険で使えるサービス</p><div class="memo"><div class="ln"></div><div class="ln"></div></div></div>
+<div class="col r"><h3>夫婦の老後資金</h3><p>何歳まで働くか／年金の見込み（ねんきん定期便）／毎月の生活費の目安</p><div class="memo"><div class="ln"></div><div class="ln"></div></div></div></div>
+<p class="row-t">相談先</p><div class="cols">
+<div class="col"><h3>親の備え</h3><p>地域包括支援センター、ケアマネジャー。相続のことは必要に応じて税理士・司法書士</p><div class="memo"><div class="ln"></div><div class="ln"></div></div></div>
+<div class="col r"><h3>夫婦の老後資金</h3><p>お金の相談窓口（FPなど）、勤務先の制度の担当窓口</p><div class="memo"><div class="ln"></div><div class="ln"></div></div></div></div>
+<p class="row-t">気をつけたいこと</p><div class="cols">
+<div class="col"><h3>親の備え</h3><p>自分たちの老後資金から出しすぎない／きょうだいとの分け方を早めに話す</p><div class="memo"><div class="ln"></div><div class="ln"></div></div></div>
+<div class="col r"><h3>夫婦の老後資金</h3><p>親のことが動いても、自分たちの準備を続けられる形にしておく</p><div class="memo"><div class="ln"></div><div class="ln"></div></div></div></div></section>
+<section class="card"><h2><span class="no">2</span>重なるところを確認する</h2><ul class="chk"><li><label><input type="checkbox"><span>親のための出費を、自分たちの老後資金から出す予定がないか</span></label></li><li><label><input type="checkbox"><span>親の家の片付けや修繕など、どちらの財布か決まっていない費用はないか</span></label></li><li><label><input type="checkbox"><span>夫婦の老後資金の見直しを、最後にしたのはいつか書けるか</span></label></li></ul><div class="tip"><b>ひとこと：</b>どちらの財布か決まっていない費用は、家族で話す話題にできます。決めるのは急がなくて大丈夫です。</div><div class="memo"><p class="cap">メモ（家族と話したいこと）</p><div class="ln"></div><div class="ln"></div><div class="ln"></div></div></section>
+  <section class="card no-print">
+    <div class="actions">
+      <button class="btn print" type="button" onclick="window.print()">このページを印刷する</button>
+      <a class="btn" href="https://lin.ee/Q6Qz6eD" target="_blank" rel="noopener">わからないところをLINEで相談する</a>
+    </div>
+    <p class="note">チェックや書き込みは、このページには保存されません。</p>
+  </section>
+  <p class="dis">このシートは、考えを整理するための目安です。特定の商品をおすすめするものではありません。税金や相続の具体的な判断は、必要に応じて税理士・司法書士などの専門家にご相談ください。</p>
+  <footer>このページは 小野 健汰 が作成しました。</footer>
+</div>
+</body>
+</html>
