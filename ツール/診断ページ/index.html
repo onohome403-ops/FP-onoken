@@ -162,9 +162,10 @@ footer{text-align:center;font-size:15px;color:var(--sub);margin-top:30px}
     $('backBtn').hidden=(i===0);
   }
   function finish(){
-    var score={}; Object.keys(TYPES).forEach(function(k){score[k]=0});
-    ans.forEach(function(t){ if(score[t]!==undefined) score[t]++; });
-    var best=Object.keys(TYPES).sort(function(a,b){return score[b]-score[a]})[0];
+    var score={},last={}; Object.keys(TYPES).forEach(function(k){score[k]=0;last[k]=-1});
+    ans.forEach(function(t,n){ if(score[t]!==undefined){ score[t]++; last[t]=n; } });
+    /* いちばん点が多いタイプが結果。同点のときは、後の質問で選んだタイプを優先する */
+    var best=Object.keys(TYPES).sort(function(a,b){return (score[b]-score[a])||(last[b]-last[a])})[0];
     var T=TYPES[best];
     $('rName').textContent=T.name; $('rOne').textContent=T.one; $('rText').textContent=T.text;
     $('rBtn').textContent=LINE.button; $('rBtn').href=LINE.url; $('rNote').textContent=LINE.note;
