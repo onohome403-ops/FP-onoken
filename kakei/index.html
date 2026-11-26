@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>おうちのお金 かんたんメモ</title>
 <meta property="og:title" content="おうちのお金 かんたんメモ">
-<meta property="og:description" content="ボタンを押すだけ。お名前や連絡先は聞きません。入れた数字は保存されません。">
+<meta property="og:description" content="ボタンをポチポチ押すだけ。お名前や連絡先は聞きません。入れた数字は保存されません。">
 <meta property="og:type" content="website">
 <script>
 /* =====================================================================
@@ -25,59 +25,68 @@ var OWNER = {
 /* ---------- ここを書き換える：②金額のボタン（単位は「万円」） ----------
    0 は「なし」と表示されます。0.5 は「5,000円」と表示されます。          */
 var MONTHLY = [
-  { key: "tedori",  label: "手取り",   hint: "お給料などで、毎月口座に入る金額", choices: [10, 15, 20, 25, 30, 35, 40, 50] },
+  { key: "tedori",  label: "手取り",   hint: "お給料などで、毎月口座に入ってくる金額です", choices: [10, 15, 20, 25, 30, 35, 40, 50] },
   { key: "sumai",   label: "住まい",   hint: "家賃・住宅ローン・管理費など",     choices: [0, 3, 5, 7, 8, 10, 12, 15] },
-  { key: "shokuhi", label: "食費",     hint: "外食もふくめて、だいたいで大丈夫です", choices: [2, 3, 4, 5, 6, 8, 10] },
-  { key: "hoken",   label: "保険料",   hint: "生命保険・医療保険・共済など（車の保険はその他へ）", choices: [0, 0.5, 1, 1.5, 2, 3, 5] },
+  { key: "shokuhi", label: "食費",     hint: "外食もふくめて、ざっくりでOKです", choices: [2, 3, 4, 5, 6, 8, 10] },
+  { key: "hoken",   label: "保険料",   hint: "生命保険・医療保険・共済など（車の保険は「その他」へどうぞ）", choices: [0, 0.5, 1, 1.5, 2, 3, 5] },
   { key: "kyoiku",  label: "教育費",   hint: "学費・習いごと・塾など",          choices: [0, 0.5, 1, 2, 3, 5, 8] },
-  { key: "sonota",  label: "その他",   hint: "光熱費・通信・車・日用品・おこづかいなど", choices: [1, 2, 3, 5, 8, 10, 15] }
+  { key: "sonota",  label: "その他",   hint: "光熱費・スマホ・車・日用品・おこづかいなど", choices: [1, 2, 3, 5, 8, 10, 15] }
 ];
 var ASSETS = [
   { key: "yokin",  label: "預金",  hint: "普通預金・定期預金など", choices: [0, 30, 50, 100, 200, 300, 500, 1000] },
   { key: "toshi",  label: "投資",  hint: "NISA・iDeCo・株・投資信託など", choices: [0, 10, 50, 100, 300, 500, 1000] }
 ];
 var PLANS = [
-  { key: "kyoiku", label: "教育", hint: "例：上の子が来年受験／まだ考えていない" },
-  { key: "sumai",  label: "住まい", hint: "例：いつか家を買いたい／実家のこと" },
-  { key: "rougo",  label: "老後", hint: "例：何歳まで働くか迷っている" }
+  { key: "kyoiku", label: "教育", hint: "たとえば「上の子が来年受験」「まだ考えてない」など" },
+  { key: "sumai",  label: "住まい", hint: "たとえば「いつか家を買いたい」「実家のこと」など" },
+  { key: "rougo",  label: "老後", hint: "たとえば「何歳まで働くか迷ってる」など" }
 ];
 
 /* ---------- ここを書き換える：③LINEのURLと一言 ---------- */
 var LINE = {
   url:  "https://lin.ee/9RHyhJ5",
-  note: "送っていただいた数字は、面談の準備にだけ使います。"
+  note: "送ってもらった数字は、面談の準備にだけ使いますね。"
 };
 
 /* ===================== ここから下は触らない ===================== */
 </script>
 <style>
-:root{--paper:#F5FBF8;--white:#fff;--soft:#E3F3EE;--line:#C4E0D8;--navy:#0F4A40;--ink:#17332D;--sub:#44605A;--green:#008E78;--gold:#F07A1C;--gold-l:#FFE27A}
+:root{--paper:#F5FBF8;--white:#fff;--soft:#E3F3EE;--line:#C4E0D8;--navy:#0F4A40;--ink:#17332D;--sub:#44605A;--green:#008E78;--gold:#F07A1C;--gold-l:#FFE27A;--peach:#FFF4E8;--peach-line:#F9CFA4}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-body{background:var(--paper);color:var(--ink);font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;font-weight:500;font-size:18px;line-height:1.8;-webkit-text-size-adjust:100%}
-.wrap{max-width:640px;margin:0 auto;padding:28px 16px 60px}
-header{text-align:center;margin-bottom:22px}
+body{background:var(--paper);color:var(--ink);font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;font-weight:500;font-size:18px;line-height:1.8;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding:24px 16px 60px}
+header{text-align:center;margin-bottom:18px}
 .who{display:inline-block;font-size:16px;font-weight:700;color:var(--sub);background:var(--soft);border-radius:999px;padding:6px 16px}
 h1{font-size:28px;line-height:1.4;color:var(--navy);margin:14px 0 8px;font-weight:900}
 .lead{font-size:18px;color:var(--sub);margin:0}
-.card{background:var(--white);border:2px solid var(--line);border-radius:18px;padding:24px 20px;margin:16px 0}
+.card{background:var(--white);border:2px solid var(--line);border-radius:24px;padding:22px 18px;margin:16px 0}
 .prog{display:flex;gap:6px;margin-bottom:14px}
 .prog span{flex:1;height:8px;border-radius:4px;background:var(--line)}
 .prog span.on{background:var(--green)}
-.qn{font-size:16px;font-weight:700;color:var(--gold);letter-spacing:.1em;margin:0 0 6px}
+.qn{font-size:16px;font-weight:700;color:var(--gold);letter-spacing:.05em;margin:0 0 6px}
 .q{font-size:22px;font-weight:700;color:var(--navy);line-height:1.5;margin:0 0 6px}
 .qs{font-size:16px;color:var(--sub);margin:0 0 14px}
-.opt{display:block;width:100%;text-align:left;font:inherit;font-size:19px;font-weight:700;color:var(--navy);background:var(--soft);border:2px solid var(--line);border-radius:14px;padding:16px 18px;margin:10px 0;cursor:pointer;line-height:1.5}
+.opt{display:block;width:100%;text-align:left;font:inherit;font-size:19px;font-weight:700;color:var(--navy);background:var(--soft);border:2px solid var(--line);border-radius:18px;padding:16px 18px;margin:10px 0;cursor:pointer;line-height:1.5}
 .opt:hover,.opt:focus-visible{border-color:var(--green);background:#fff;outline:none}
 .opt small{display:block;font-size:15px;font-weight:500;color:var(--sub)}
 .back{font:inherit;font-size:16px;font-weight:700;color:var(--sub);background:none;border:0;padding:8px 0;cursor:pointer;text-decoration:underline}
-.start{font:inherit;display:block;width:100%;font-size:21px;font-weight:900;color:#fff;background:var(--green);border:0;border-radius:14px;padding:18px;cursor:pointer;margin-top:18px}
-.btn{display:block;width:100%;text-align:center;font:inherit;font-size:19px;font-weight:900;color:#fff;background:#06C755;border:0;border-radius:14px;padding:18px 16px;text-decoration:none;line-height:1.4;cursor:pointer}
+.start{font:inherit;display:block;width:100%;font-size:21px;font-weight:900;color:#fff;background:var(--green);border:0;border-radius:999px;padding:18px;cursor:pointer;margin-top:18px}
+.btn{display:block;width:100%;text-align:center;font:inherit;font-size:19px;font-weight:900;color:#fff;background:#06C755;border:0;border-radius:999px;padding:18px 16px;text-decoration:none;line-height:1.4;cursor:pointer}
 .btn:hover{filter:brightness(1.05)}
 .note{font-size:16px;color:var(--sub);text-align:center;margin:12px 0 0}
-.safe{font-size:16px;color:var(--sub);background:var(--soft);border-radius:12px;padding:12px 14px;margin:0}
+.safe{font-size:16px;color:var(--sub);background:var(--soft);border-radius:16px;padding:12px 14px;margin:0}
 footer{text-align:center;font-size:15px;color:var(--sub);margin-top:30px}
 [hidden]{display:none!important}
+
+/* ほっくま（案内役） */
+.hk-row{display:flex;align-items:flex-end;gap:10px;margin:0 0 16px}
+.hk{flex:none;width:84px;height:auto;display:block}
+.bubble{position:relative;flex:1;background:var(--peach);border:2px solid var(--peach-line);border-radius:20px;padding:12px 14px;font-size:16px;line-height:1.7;color:var(--ink);margin-bottom:14px}
+.bubble::before{content:"";position:absolute;left:-10px;bottom:18px;border:8px solid transparent;border-right-color:var(--peach-line);border-left:0}
+.bubble::after{content:"";position:absolute;left:-7px;bottom:19px;border:7px solid transparent;border-right-color:var(--peach);border-left:0}
+.bubble b{color:var(--gold)}
+.hk-name{display:block;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:2px}
 
 /* 項目 */
 .item{border-top:1px dashed var(--line);padding:16px 0 6px}
@@ -91,16 +100,16 @@ footer{text-align:center;font-size:15px;color:var(--sub);margin-top:30px}
 .col-h b{font-size:17px;color:var(--green);white-space:nowrap}
 .col-h b.later{color:var(--gold)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font:inherit;font-size:16px;font-weight:700;color:var(--navy);background:var(--soft);border:2px solid var(--line);border-radius:10px;padding:7px 10px;cursor:pointer;line-height:1.3;min-height:44px}
-.two .chip{font-size:15px;padding:6px 8px}
+.chip{font:inherit;font-size:16px;font-weight:700;color:var(--navy);background:var(--soft);border:2px solid var(--line);border-radius:999px;padding:7px 12px;cursor:pointer;line-height:1.3;min-height:44px}
+.two .chip{font-size:15px;padding:6px 9px}
 .chip[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
-.chip.later{background:#fff;color:var(--gold);border-color:#F6C89F}
+.chip.later{background:#fff;color:var(--gold);border-color:var(--peach-line)}
 .chip.later[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:#fff}
 .chip.other{background:#fff;border-style:dashed}
 .custom{display:flex;align-items:center;gap:6px;margin-top:8px}
-.custom input{font:inherit;font-size:18px;width:100%;min-width:0;padding:8px 10px;border:2px solid var(--green);border-radius:10px;color:var(--ink)}
+.custom input{font:inherit;font-size:18px;width:100%;min-width:0;padding:8px 12px;border:2px solid var(--green);border-radius:14px;color:var(--ink)}
 .custom span{font-size:15px;font-weight:700;color:var(--sub);white-space:nowrap}
-textarea{font:inherit;font-size:17px;width:100%;min-height:76px;padding:10px 12px;border:2px solid var(--line);border-radius:12px;color:var(--ink);resize:vertical;line-height:1.6}
+textarea{font:inherit;font-size:17px;width:100%;min-height:76px;padding:10px 12px;border:2px solid var(--line);border-radius:16px;color:var(--ink);resize:vertical;line-height:1.6}
 textarea:focus,.custom input:focus{outline:none;border-color:var(--green)}
 .nav{display:flex;justify-content:space-between;align-items:center;margin-top:18px;gap:12px}
 .nav .start{margin-top:0;width:auto;flex:1;font-size:19px;padding:16px}
@@ -111,18 +120,19 @@ table{width:100%;border-collapse:collapse;font-size:16px;margin:0 0 18px}
 th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 th:first-child,td:first-child{text-align:left;font-weight:700;color:var(--navy)}
 thead th{font-size:14px;color:var(--sub);font-weight:700}
-tr.total td{border-top:2px solid var(--navy);border-bottom:0;font-weight:900;color:var(--navy)}
 td.later{color:var(--gold)}
 .gauge{margin:4px 0 18px}
-.bar{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--soft);gap:2px}
+.bar{display:flex;height:22px;border-radius:11px;overflow:hidden;background:var(--soft);gap:2px}
 .bar i{display:block;height:100%}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--sub);margin-top:8px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
-.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.legend i{width:12px;height:12px;border-radius:50%;display:inline-block}
 .plans p{margin:0 0 8px;font-size:17px}
 .plans b{color:var(--navy)}
-pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:15px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;margin:0 0 16px;max-height:220px;overflow:auto}
-.done{font-size:17px;font-weight:700;color:var(--green);text-align:center;margin:12px 0 0}
+pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:15px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px;margin:0 0 16px;max-height:220px;overflow:auto}
+.done{display:flex;align-items:center;gap:10px;margin:14px 0 0}
+.done .hk{width:72px}
+.done .bubble{margin-bottom:10px}
 .steps-line{font-size:16px;color:var(--sub);margin:12px 0 0;padding-left:1.3em}
 .steps-line li{margin:2px 0}
 </style>
@@ -132,50 +142,63 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:15px;backgr
   <header>
     <span class="who" id="who"></span>
     <h1 id="ttl"></h1>
-    <p class="lead">ボタンを押すだけ。3分ほどで終わります。</p>
+    <p class="lead">ボタンをポチポチ押すだけ。<br>3分くらいで終わりますよ。</p>
   </header>
 
   <!-- はじめ -->
   <section class="card" id="intro">
-    <p class="safe">🔒 お名前・ご住所・お電話番号は聞きません。<br>入れた数字は、このページにもサーバーにも保存されません。ページを閉じると消えます。</p>
-    <p class="q" style="margin-top:18px">何人分を入れますか？</p>
-    <button class="opt" type="button" data-n="1">👤 1人分<small>ご自身の分だけ入れます</small></button>
-    <button class="opt" type="button" data-n="2">👥 ご夫婦2人分<small>お二人の数字を横に並べて入れます</small></button>
+    <div class="hk-row">
+      <img class="hk" src="img/hokkuma_wave.png" alt="手をふる、しろくまのほっくま" width="200" height="274">
+      <p class="bubble"><span class="hk-name">ほっくま</span>こんにちは、ほっくまです🐻‍❄️<br>おうちのお金を、いっしょに<b>ざっくり</b>見てみましょう。</p>
+    </div>
+    <p class="safe">🔒 お名前・ご住所・お電話番号は聞かないので、安心してくださいね。<br>入れた数字は、このページにもサーバーにも保存されません。ページを閉じると消えちゃいます。</p>
+    <p class="q" style="margin-top:18px">今日は何人分にしましょう？</p>
+    <button class="opt" type="button" data-n="1">👤 ひとり分<small>じぶんの分だけ入れます</small></button>
+    <button class="opt" type="button" data-n="2">👥 ふたり分（ご夫婦）<small>おふたりの数字を、横にならべて入れられます</small></button>
   </section>
 
   <!-- 入力 -->
   <section class="card" id="step" hidden>
     <div class="prog" id="prog"></div>
+    <div class="hk-row">
+      <img class="hk" id="stepHk" src="img/hokkuma_think.png" alt="" width="200" height="282">
+      <p class="bubble" id="stepSay"></p>
+    </div>
     <p class="qn" id="qn"></p>
     <p class="q" id="q"></p>
     <p class="qs" id="qs"></p>
     <div id="body"></div>
     <div class="nav">
-      <button class="back" type="button" id="backBtn">ひとつ前に戻る</button>
-      <button class="start" type="button" id="nextBtn">次へ</button>
+      <button class="back" type="button" id="backBtn">◀ もどる</button>
+      <button class="start" type="button" id="nextBtn">つぎへ ▶</button>
     </div>
   </section>
 
   <!-- まとめ -->
   <section class="card" id="result" hidden>
     <div class="prog" id="prog2"></div>
-    <p class="qn">まとめ</p>
-    <p class="q" style="margin-bottom:14px">入れていただいた内容です</p>
+    <div class="hk-row">
+      <img class="hk" src="img/hokkuma_banzai.png" alt="ばんざいする、しろくまのほっくま" width="200" height="228" loading="lazy">
+      <p class="bubble"><span class="hk-name">ほっくま</span>おつかれさまでした！🎉<br>入れてくれた内容を、まとめてみましたよ。</p>
+    </div>
     <div id="summary"></div>
-    <p class="sum-t">送る文</p>
+    <p class="sum-t">LINEで送る文</p>
     <pre id="msg"></pre>
     <button class="btn" type="button" id="lineBtn">LINEで送る</button>
-    <p class="done" id="copied" hidden>✅ 文をコピーしました。LINEのトークに貼り付けて送ってください。</p>
+    <div class="done" id="copied" hidden>
+      <img class="hk" src="img/hokkuma_bow.png" alt="おじぎをする、しろくまのほっくま" width="200" height="318" loading="lazy">
+      <p class="bubble"><span class="hk-name">ほっくま</span>コピーできました！<br>LINEのトークに貼り付けて、送ってくださいね。ありがとうございます😊</p>
+    </div>
     <ol class="steps-line">
       <li>ボタンを押すと、文がコピーされてLINEが開きます</li>
-      <li>トーク画面の入力欄を長押しして「貼り付け」</li>
-      <li>送信ボタンを押して完了です</li>
+      <li>トークの入力欄を長押しして「貼り付け」</li>
+      <li>送信ボタンを押したら、おしまいです</li>
     </ol>
     <p class="note" id="lineNote"></p>
-    <div style="text-align:center;margin-top:10px"><button class="back" type="button" id="editBtn">入力に戻って直す</button></div>
+    <div style="text-align:center;margin-top:10px"><button class="back" type="button" id="editBtn">入力にもどって直す</button></div>
   </section>
 
-  <footer>このページは <span id="fName"></span> が作成しました。</footer>
+  <footer>このページは <span id="fName"></span> が作りました。</footer>
 </div>
 
 <script>
@@ -191,9 +214,15 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:15px;backgr
   var people=1, step=0, data={};
   var WHO=['ご自身','パートナー'];
   var STEPS=[
-    {t:'毎月のお金', q:'毎月のお金を教えてください', s:'だいたいで大丈夫です。分からない所は「あとで」を押してください。', items:MONTHLY, kind:'money'},
-    {t:'いまあるお金', q:'いまあるお金を教えてください', s:'おおよその合計で大丈夫です。', items:ASSETS, kind:'money'},
-    {t:'これからの予定', q:'これからのことで、気になっていることは？', s:'ひとことで大丈夫です。なければ空いたままで進めます。', items:PLANS, kind:'text'}
+    {t:'毎月のお金', q:'毎月のお金、ざっくり教えてくださいね', s:'だいたいで大丈夫です。',
+     hk:'think', alt:'あごに手をあてて考える、しろくまのほっくま', w:200, h:282,
+     say:'わからない所は<b>「あとで」</b>をポチッとすればOKです。あとからいっしょに確かめましょう。', items:MONTHLY, kind:'money'},
+    {t:'いまあるお金', q:'いま手元にあるお金は、どれくらいですか？', s:'だいたいの合計で大丈夫ですよ。',
+     hk:'thumbsup', alt:'親指を立てる、しろくまのほっくま', w:200, h:288,
+     say:'その調子です！あと少しで終わりますよ。', items:ASSETS, kind:'money'},
+    {t:'これからの予定', q:'これからのことで、ちょっと気になっていることはありますか？', s:'ひとことで大丈夫。なければ空いたままで、つぎへどうぞ。',
+     hk:'thanks', alt:'両手を合わせてにっこりする、しろくまのほっくま', w:200, h:329,
+     say:'思いついたことを、気軽に書いてもらえるとうれしいです。', items:PLANS, kind:'text'}
   ];
 
   function fmt(v){
@@ -265,13 +294,15 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:15px;backgr
   function render(){
     var S=STEPS[step];
     prog($('prog'),step);
+    var img=$('stepHk'); img.src='img/hokkuma_'+S.hk+'.png'; img.alt=S.alt; img.width=S.w; img.height=S.h;
+    $('stepSay').innerHTML='<span class="hk-name">ほっくま</span>'+S.say;
     $('step').classList.toggle('two', people>1 && S.kind==='money');
     $('qn').textContent=(step+1)+' / '+STEPS.length+'　'+S.t;
     $('q').textContent=S.q;
-    $('qs').textContent=S.s+(people>1&&S.kind==='money'?' お二人で一緒に払っているものは、どちらか一方に入れてください。':'')+(people>1&&S.kind==='text'?' お二人のどちらが書いても大丈夫です。':'');
+    $('qs').textContent=S.s+(people>1&&S.kind==='money'?' おふたりで一緒に払っているものは、どちらか一方に入れてくださいね。':'')+(people>1&&S.kind==='text'?' おふたりのどちらが書いても大丈夫です。':'');
     var body=$('body'); body.innerHTML='';
     S.items.forEach(function(it){ body.appendChild(S.kind==='money'?moneyItem(it):textItem(it)); });
-    $('nextBtn').textContent= step<STEPS.length-1 ? '次へ' : 'まとめを見る';
+    $('nextBtn').textContent= step<STEPS.length-1 ? 'つぎへ ▶' : 'まとめを見る ▶';
   }
 
   /* ---- まとめ ---- */
@@ -279,8 +310,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:15px;backgr
   function num(k,p){ var v=get(k,p); return typeof v==='number'?v:null; }
   function summarize(){
     prog($('prog2'),STEPS.length);
-    var out=document.createElement('div');
-    function table(title,items,withTotal){
+    function table(title,items){
       var h='<p class="sum-t">'+title+'</p><table><thead><tr><th></th>';
       for(var p=0;p<people;p++) h+='<th>'+(people>1?WHO[p]:'')+'</th>';
       if(people>1) h+='<th>合計</th>';
@@ -298,7 +328,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:15px;backgr
     var html=table('毎月のお金',MONTHLY)+balance()+table('いまあるお金',ASSETS);
     var pl='';
     PLANS.forEach(function(it){ var t=(data['t_'+it.key]||'').trim(); if(t) pl+='<p><b>'+it.label+'：</b>'+esc(t)+'</p>'; });
-    html+='<p class="sum-t">これからの予定</p><div class="plans">'+(pl||'<p style="color:var(--sub)">（入力なし）</p>')+'</div>';
+    html+='<p class="sum-t">これからのこと</p><div class="plans">'+(pl||'<p style="color:var(--sub)">（とくになし）</p>')+'</div>';
     $('summary').innerHTML=html;
     $('msg').textContent=message();
     $('copied').hidden=true;
@@ -311,14 +341,14 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:15px;backgr
     var left=inc-out, scale=Math.max(inc,out);
     var bar=parts.map(function(x){return '<i style="width:'+(x.v/scale*100)+'%;background:'+x.c+'" title="'+x.l+' '+fmt(x.v)+'"></i>'}).join('');
     var leg=parts.map(function(x){return '<span><i style="background:'+x.c+'"></i>'+x.l+' '+fmt(x.v)+'</span>'}).join('');
-    return '<div class="gauge"><p class="item-s" style="margin-bottom:6px">手取り '+fmt(inc)+' のうち、毎月出ていくお金'+(missing?'（「あとで」や未入力の所は、ふくまれていません）':'')+'</p>'
+    return '<div class="gauge"><p class="item-s" style="margin-bottom:6px">手取り '+fmt(inc)+' のうち、毎月出ていくお金'+(missing?'（「あとで」や空いている所は、ふくまれていません）':'')+'</p>'
       +'<div class="bar" role="img" aria-label="手取りに対する毎月の出費の内訳">'+bar+'</div><div class="legend">'+leg+'</div>'
-      +'<p style="margin:10px 0 0;font-weight:700;color:var(--navy)">差し引き（目安）：'+(left>=0?fmt(left)+' 残る計算です':fmt(-left)+' 足りない計算です')+'</p></div>';
+      +'<p style="margin:10px 0 0;font-weight:700;color:var(--navy)">差し引き（だいたい）：'+(left>=0?fmt(left)+' 残る計算です':'出ていくお金のほうが '+fmt(-left)+' 多い計算です')+'</p></div>';
   }
   function esc(s){ return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
   function message(){
     var L=[];
-    L.push('【家計メモ】'+(people>1?'ご夫婦2人分':'1人分'));
+    L.push('【家計メモ】'+(people>1?'ふたり分':'ひとり分'));
     function block(title,items){
       L.push(''); L.push('■'+title);
       items.forEach(function(it){
@@ -329,7 +359,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:15px;backgr
     }
     block('毎月のお金',MONTHLY);
     block('いまあるお金',ASSETS);
-    L.push(''); L.push('■これからの予定');
+    L.push(''); L.push('■これからのこと');
     PLANS.forEach(function(it){ var t=(data['t_'+it.key]||'').trim(); L.push(it.label+'：'+(t||'とくになし')); });
     return L.join('\n');
   }
