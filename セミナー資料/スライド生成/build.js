@@ -119,7 +119,7 @@ function ageLabel(slide, text, cx, y, color = C.text1, bold = false) {
   const t2 = T(s, [{ text: "入っているのに、", options: { breakLine: true } }, { text: "受け取れない！？" }],
     { x: 0.7, y: 1.4, w: 6.2, h: 1.6, fontSize: 38, color: C.text2, fontFace: HEAD, valign: "top" });
   const t3 = T(s, "〜 \"備え\"の使い方 20分講座 〜", { x: 0.7, y: 3.05, w: 6, h: 0.45, fontSize: 18, color: C.text1, fontFace: HEAD });
-  const t4 = card(s, { text: "2026.11.27（金）オンライン ／ 講師：小野 健汰（FP・元看護師）", x: 0.7, y: 3.95, w: 5.9, h: 0.5, fontSize: 13, fill: { color: C.background1 }, line: { color: C.accent1, width: 1 }, color: C.text2 });
+  const t4 = card(s, { text: "2026.11.27（金）オンライン\n講師：小野 健汰（元看護師・保健師・ケアマネのFP）", x: 0.7, y: 3.95, w: 5.9, h: 0.86, fontSize: 13, fill: { color: C.background1 }, line: { color: C.accent1, width: 1 }, color: C.text2 });
   anim([t1, t2], "after");
   anim([t3], "after");
   anim(ic1.concat([t4]), "after");
@@ -352,9 +352,9 @@ function ageLabel(slide, text, cx, y, color = C.text1, bold = false) {
   const tblCap = T(s, "一覧表のイメージ（記入例）", { x: 0.5, y: 3.05, w: 5.0, h: 0.3, fontSize: 10, color: "7A8A83" });
   anim([tblName, tblCap], "with");
   const det = [
-    [fa.FaRegClock, C.accent1, "30分・オンライン（Zoom）"],
+    [fa.FaRegClock, C.accent1, "60分・オンライン（Zoom）"],
     [fa.FaHeart, C.accent2, "無料・無理なご提案はしません"],
-    [fa.FaComments, C.accent4, "LINEで日程を決めるだけ"],
+    [fa.FaComments, C.accent4, "公式LINEから予約ページへ"],
   ];
   for (let i = 0; i < det.length; i++) {
     const y = 1.3 + i * 0.62;
@@ -362,14 +362,14 @@ function ageLabel(slide, text, cx, y, color = C.text1, bold = false) {
     const tx = T(s, det[i][2], { x: 6.5, y: y - 0.03, w: 3.0, h: 0.55, fontSize: 13 });
     anim(ic.concat([tx]), i === 0 ? "click" : "after");
   }
-  const qr = card(s, { text: "LINEのQR\n（ここに貼る）", x: 7.85, y: 3.25, w: 1.6, h: 1.45, fill: { color: C.background1 }, line: { color: C.accent1, width: 1.25, dashType: "dash" }, fontSize: 11, align: "center", color: "7A8A83" });
+  const qr = card(s, { text: "公式LINEのQR\n（ここに貼る）", x: 7.85, y: 3.25, w: 1.6, h: 1.45, fill: { color: C.background1 }, line: { color: C.accent1, width: 1.25, dashType: "dash" }, fontSize: 11, align: "center", color: "7A8A83" });
   const qrIc = await icon(s, fa.FaQrcode, { x: 6.48, y: 3.35, d: 0.6, bg: C.text2 });
   const qrT = T(s, "QRコードか\nチャットのリンクから", { x: 5.85, y: 4.05, w: 1.85, h: 0.55, fontSize: 10, color: "6B7A73", valign: "top", align: "center" });
   anim([qr].concat(qrIc, [qrT]), "click");
   const last = card(s, { text: [{ text: "今日覚えてほしいのは、1つだけ", options: { breakLine: true, fontSize: 12 } }, { text: "備えが生きている間は、色々なことができる" }], x: 0.5, y: 3.55, w: 5.0, h: 1.1, fill: { color: C.accent3, transparency: 35 }, line: { color: C.accent3 }, fontSize: 14, fontFace: HEAD });
   anim([last], "click", "zoom");
   foot(s, "※表は記入例です。個別相談では、お手元の証券（写真でも可）をもとにお作りします");
-  s.addNotes("「参加者の皆さま限定で、生保も損保もまとめた『わが家の備え一覧表』を無料でお作りします。いつまでの保障か、使える仕組みがあるか、請求漏れがないかが、ひと目でわかります。無理なご提案はしません。画面のQRコードか、チャットに貼るリンクから私のLINEを追加して、『一覧表』とひと言送ってください。日程はLINEで一緒に決めましょう。」\n「今日は内容を覚えなくて大丈夫です。備えが生きている間は色々なことができる、その1点だけ覚えて、何かあったらご連絡ください。」\n→このスライドを表示したまま質疑応答へ。最後にLINEのリンクをもう一度チャットに貼る。");
+  s.addNotes("「参加者の皆さま限定で、生保も損保もまとめた『わが家の備え一覧表』を無料でお作りします。いつまでの保障か、使える仕組みがあるか、請求漏れがないかが、ひと目でわかります。無理なご提案はしません。画面のQRコードか、チャットに貼るリンクから公式LINEを追加して、『一覧表』とひと言送ってください。すぐに予約ページが届きます。空いている日時を選ぶだけで、Zoomのリンクも自動で届きます。」\n「今日は内容を覚えなくて大丈夫です。備えが生きている間は色々なことができる、その1点だけ覚えて、何かあったらご連絡ください。」\n→このスライドを表示したまま質疑応答へ。最後に公式LINEのリンクをもう一度チャットに貼る。");
 
   await pres.writeFile({ fileName: OUT });
   await applyTheme(OUT, THEME);
