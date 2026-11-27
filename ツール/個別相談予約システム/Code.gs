@@ -72,6 +72,9 @@ const CONFIG = {
       NOTE_PLACEHOLDER: '例）親の介護が始まりそうで、お金の準備について相談したい',
       SHOW_CHARA: true,                        // ほっくまを出すか
       MAIL: 'consult',                         // メール文面の種類（consult / partner）
+      // 対面の希望も例外として受け付けるか。受け付けると、フォームに「対面を希望する」のチェックが出る。
+      // 対面のときはZoomを作らず、こちらからお客様に電話して場所・時間を決める（選ばれた日時は仮押さえ）
+      IN_PERSON: true,
     },
     partner: {
       LABEL: '協業面談',
@@ -86,6 +89,7 @@ const CONFIG = {
       NOTE_PLACEHOLDER: '例）協業のご相談、サービスのご紹介 など',
       SHOW_CHARA: true,
       MAIL: 'partner',
+      IN_PERSON: false,
     },
   },
 
@@ -106,9 +110,12 @@ const CONFIG = {
     '住宅ローンの返済予定表（ローンがある方）',
   ],
   OWNER_NOTIFY_EMAIL: '', // 空なら、このスクリプトのオーナー（自分）に通知
-  // Web予約はオンラインのみ。対面の予定は自分でカレンダーに直接入れる運用
-  // （複数並べると、お客様が予約画面で選べるようになる）
+  // Web予約はオンラインが基本。対面は BOOKING_TYPES の IN_PERSON: true の種類だけ、例外として受け付ける
+  // （METHODS を複数並べると、お客様が予約画面で選べるようになる）
   METHODS: ['オンライン'],
+  IN_PERSON_METHOD: '対面',
+  // 対面の希望が入ったとき、お客様へのメールに「この番号からお電話します」と書く番号。
+  // このコードは公開リポジトリにあるので、番号はここではなく、スクリプト プロパティ OWNER_PHONE に登録する（未登録なら書かない）
 
   TIME_ZONE: 'Asia/Tokyo',
 
@@ -166,6 +173,8 @@ function doGet(e) {
     fewSlots: CONFIG.FEW_SLOTS_THRESHOLD,
     timeZone: CONFIG.TIME_ZONE,
     methods: CONFIG.METHODS,
+    inPerson: !!t.IN_PERSON,
+    inPersonMethod: CONFIG.IN_PERSON_METHOD,
     topics: t.TOPICS || [],
   };
   return tpl.evaluate()
@@ -221,7 +230,8 @@ function bookSlot(form) {
     }
 
     const t = typeConf_(data.type);
-    const title = `${t.EVENT_TITLE_PREFIX}${data.company ? data.company + ' ' : ''}${data.name}様（${data.method}）`;
+    // 対面は場所が決まっていないので、カレンダーでも「要電話」とわかるようにする（電話して決めたら題名を直してよい）
+    const title = `${t.EVENT_TITLE_PREFIX}${data.company ? data.company + ' ' : ''}${data.name}様（${data.method}${isInPerson_(data.method) ? '・要電話' : ''}）`;
     const when = formatSlotLabel_(slot);
 
     // Zoomの発行に失敗しても予約自体は受け付け、URLは後から手動で送る
@@ -265,7 +275,7 @@ function bookSlot(form) {
     }
 
     sendMails_(data, when, zoom, zoomError, cancelToken ? cancelUrl_(cancelToken) : '');
-    return { when: when, name: data.name, method: data.method, zoomUrl: zoom ? zoom.joinUrl : '' };
+    return { when: when, name: data.name, method: data.method, inPerson: isInPerson_(data.method), zoomUrl: zoom ? zoom.joinUrl : '' };
   } finally {
     lock.releaseLock();
   }
@@ -372,6 +382,10 @@ function buildEventDescription_(d) {
     `メール：${d.email}`,
     `電話：${d.phone}`,
     `方法：${d.method}`,
+    ...(isInPerson_(d.method) ? [
+      '※対面のご希望です。こちらからお電話して、場所と時間を決めてください（この日時は仮押さえ）',
+      `お電話のつながりやすい時間帯：${d.callTime || '指定なし'}`,
+    ] : []),
     ...((t.TOPICS || []).length ? [`ご相談内容：${d.topics.join('、') || '未選択'}`] : []),
     '',
     `【${t.NOTE_LABEL}】`,
@@ -394,8 +408,36 @@ function cancelGuide_(url) {
     : 'キャンセルや日程の変更は、このメールにそのままご返信ください。';
 }
 
+/** 対面の希望か（対面は例外扱いで、こちらから電話して場所・時間を決める） */
+function isInPerson_(method) {
+  return String(method || '') === CONFIG.IN_PERSON_METHOD;
+}
+
+/** お客様に「この番号からお電話します」と伝える番号（スクリプト プロパティ OWNER_PHONE。未登録なら空） */
+function ownerPhone_() {
+  try {
+    return PropertiesService.getScriptProperties().getProperty('OWNER_PHONE') || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+/** 対面のご希望をいただいたときの、確認メールの「場所とお時間の決め方」 */
+function inPersonCallGuide_(d) {
+  const from = ownerPhone_();
+  return [
+    '対面でのご相談をご希望いただき、ありがとうございます。',
+    `場所（ご自宅・お近くのカフェなど）とお時間は、小野から ${d.phone} にお電話してご相談させてください。`,
+    ...(from ? [`お電話は ${from} からおかけします。`] : []),
+    ...(d.callTime ? [`ご指定の「${d.callTime}」をめやすにおかけします。`] : []),
+    '',
+    '上の日時は、仮のご予約としてお取りしています。',
+    'お電話で場所とお時間が決まりましたら、正式なご予約となります。',
+  ].join('\n');
+}
+
 /** 参加方法のブロック（Zoomあり／オンラインだがURL未発行／対面） */
-function joinGuide_(method, zoom) {
+function joinGuide_(method, zoom, place) {
   if (zoom) {
     return [
       'お時間になりましたら、下のZoomからご参加ください。',
@@ -408,6 +450,12 @@ function joinGuide_(method, zoom) {
   }
   if (String(method).indexOf('オンライン') !== -1) {
     return '参加用のURLは、前日までにあらためてお送りします。\nお顔を出さず、音声だけでのご参加でも大丈夫です。';
+  }
+  if (isInPerson_(method)) {
+    // 電話で決めた場所を、カレンダーの予定の「場所」に入れておくと、リマインドに載る
+    return place
+      ? `場所：${place}\nお電話でお決めした場所で、お待ちしています。`
+      : '場所は、お電話でお決めしたところでお会いします。\nまだお電話がつながっていない場合は、このメールにご返信ください。';
   }
   return '場所などの詳しいご案内は、前日までにあらためてお送りします。';
 }
@@ -423,20 +471,21 @@ function bringGuide_() {
 }
 
 function buildConfirmBody_(d, when, zoom, cancelUrl) {
+  const inPerson = isInPerson_(d.method);
   return [
     `${d.name} 様`,
     '',
     CONFIG.MAIL_INTRO,
     'このたびは個別相談にお申し込みいただき、ありがとうございます。',
-    '以下の内容でご予約をお受けしました。',
+    inPerson ? '以下の内容で、仮のご予約をお受けしました。' : '以下の内容でご予約をお受けしました。',
     '',
     '■ ご予約内容',
-    `日時：${when}`,
-    `相談方法：${d.method}${zoom ? '（Zoom）' : ''}`,
+    `日時：${when}${inPerson ? '（仮）' : ''}`,
+    `相談方法：${d.method}${zoom ? '（Zoom）' : ''}${inPerson ? '（場所はお電話で決めます）' : ''}`,
     `ご相談内容：${d.topics.join('、') || '当日お聞きします'}`,
     '',
-    '■ 参加方法',
-    joinGuide_(d.method, zoom),
+    inPerson ? '■ 場所とお時間の決め方' : '■ 参加方法',
+    inPerson ? inPersonCallGuide_(d) : joinGuide_(d.method, zoom),
     '',
     `■ 当日の流れ（${CONFIG.SLOT_MINUTES}分）`,
     'はじめに、今の状況や気になっていることをゆっくりお聞きします。',
@@ -518,7 +567,7 @@ function buildPartnerReminderBody_(name, company, when, method, zoom, cancelUrl)
   ].join('\n');
 }
 
-function buildReminderBody_(name, when, method, zoom, cancelUrl) {
+function buildReminderBody_(name, when, method, zoom, cancelUrl, place) {
   return [
     `${name || ''} 様`,
     '',
@@ -528,8 +577,8 @@ function buildReminderBody_(name, when, method, zoom, cancelUrl) {
     '■ 日時',
     when,
     '',
-    '■ 参加方法',
-    joinGuide_(method || 'オンライン', zoom),
+    isInPerson_(method) ? '■ 場所' : '■ 参加方法',
+    joinGuide_(method || 'オンライン', zoom, place),
     '',
     '■ あるとスムーズなもの',
     bringGuide_(),
@@ -546,20 +595,30 @@ function buildReminderBody_(name, when, method, zoom, cancelUrl) {
 function sendMails_(d, when, zoom, zoomError, cancelUrl) {
   const ownerEmail = CONFIG.OWNER_NOTIFY_EMAIL || Session.getEffectiveUser().getEmail();
   const t = typeConf_(d.type);
+  const inPerson = isInPerson_(d.method);
 
   MailApp.sendEmail({
     to: d.email,
     replyTo: ownerEmail,
     name: CONFIG.OWNER_NAME,
-    subject: `【ご予約確定】${t.MAIL === 'partner' ? 'お打ち合わせ' : '個別相談'} ${when}`,
+    // 対面は場所が決まるまで仮のご予約なので「確定」と書かない
+    subject: `${inPerson ? '【ご予約受付】' : '【ご予約確定】'}${t.MAIL === 'partner' ? 'お打ち合わせ' : '個別相談'} ${when}`,
     body: t.MAIL === 'partner' ? buildPartnerConfirmBody_(d, when, zoom, cancelUrl) : buildConfirmBody_(d, when, zoom, cancelUrl),
   });
 
   MailApp.sendEmail({
     to: ownerEmail,
-    subject: `【新規予約・${t.LABEL}】${when} ${d.company ? d.company + ' ' : ''}${d.name}様（${d.method}）`,
+    subject: `【新規予約・${t.LABEL}${inPerson ? '・対面希望・要電話' : ''}】${when} ${d.company ? d.company + ' ' : ''}${d.name}様（${d.method}）`,
     body: [
       'Web予約フォームから新しい予約が入りました。',
+      ...(inPerson ? [
+        '',
+        '★対面のご希望です。お客様にお電話して、場所と時間を決めてください。',
+        `　電話：${d.phone}（つながりやすい時間帯：${d.callTime || '指定なし'}）`,
+        '　決まったら、カレンダーの予定の「場所」に入れると、前日のリマインドメールに載ります。',
+        '　時間が変わったら、カレンダーの予定をそのまま動かしてください（リマインドも動いた日時で届きます）。',
+        '　お客様には「仮のご予約」「小野から電話します」と伝えてあります。',
+      ] : []),
       ...(zoomError ? ['', '※Zoomの自動発行に失敗しました。お客様にURLを手動でお送りください。', `（${zoomError}）`] : []),
       '',
       `日時：${when}`,
@@ -609,7 +668,7 @@ function sendReminders() {
         subject: `【リマインド】${t.MAIL === 'partner' ? 'お打ち合わせ' : '個別相談'} ${when}`,
         body: t.MAIL === 'partner'
           ? buildPartnerReminderBody_(ev.getTag('customerName'), ev.getTag('company'), when, ev.getTag('method'), zoom, link)
-          : buildReminderBody_(ev.getTag('customerName'), when, ev.getTag('method'), zoom, link),
+          : buildReminderBody_(ev.getTag('customerName'), when, ev.getTag('method'), zoom, link, zoom ? '' : ev.getLocation()),
       });
       ev.setTag('reminded', new Date().toISOString());
     } catch (e) {
@@ -867,13 +926,16 @@ function validateForm_(f) {
     method: s(f && f.method),
     topics: (Array.isArray(f && f.topics) ? f.topics : []).map(s).filter(x => (t.TOPICS || []).indexOf(x) !== -1),
     note: s(f && f.note).slice(0, 1000),
+    callTime: s(f && f.callTime).slice(0, 100),
   };
+  const methodOk = CONFIG.METHODS.indexOf(d.method) !== -1 || (t.IN_PERSON && isInPerson_(d.method));
+  if (!isInPerson_(d.method)) d.callTime = '';
   if (!d.start || isNaN(new Date(d.start).getTime())) throw new Error('日時を選択してください。');
   if (t.ASK_COMPANY && !d.company) throw new Error('会社名・団体名を入力してください。');
   if (!d.name) throw new Error('お名前を入力してください。');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) throw new Error('メールアドレスの形式をご確認ください。');
   if (!/^[0-9０-９\-－+() ]{10,20}$/.test(d.phone)) throw new Error('電話番号をご確認ください。');
-  if (CONFIG.METHODS.indexOf(d.method) === -1) throw new Error('相談方法を選択してください。');
+  if (!methodOk) throw new Error('相談方法を選択してください。');
   return d;
 }
 
